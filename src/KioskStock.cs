@@ -5,12 +5,18 @@ using System.Linq;
 
 namespace TankStations;
 
+// C# code for inserting tank station tiers 1 and 2 into supply kiosk inventories
+// Compatible with multiple other mods also modifying the same inventories
+// Basically copied from Valtorra's Ship's Water and Testudo Safe Pump mods
+
 internal static class KioskStock
 {
-    private static readonly string[] PoolNames = new string[11]
+    private static readonly string[] PoolNames = new string[4]//11]
     {
-        "ItmOKLGSupplyKioskInv", "ItmSupplyKioskBCERInv", "ItmSupplyKioskBCRSInv", "ItmSupplyKioskInv", "ItmOKLGFurnishingsKioskInv", "ItmFurnishingsKioskBCERInv", "ItmFurnishingsKioskBCRSInv", "ItmTraderSanDiegoKangInv", "ItmTraderSanDiegoTSDOInv", "ItmTraderBCERKioskTSDOInv",
-        "ItmTraderBCRSKioskTSDOInv"
+        "ItmOKLGSupplyKioskInv", "ItmSupplyKioskBCERInv", "ItmSupplyKioskBCRSInv", "ItmSupplyKioskInv", // K-Leg - Port Azikiwe, Calico City - Port Mojave, Ring Station - Zhonghuamen Terminal, and the fallback supply kiosk for generic stations
+        //"ItmOKLGFurnishingsKioskInv", "ItmFurnishingsKioskBCERInv", "ItmFurnishingsKioskBCRSInv", // I know Valtorra makes water and the safe pump available at sundries (furniture) but tank stations are kinda heavy industrial
+        //"ItmTraderSanDiegoKangInv", "ItmTraderSanDiegoTSDOInv", // I've made tank stations manufactured by Ryokka in flavor text so don't stock them at competitors
+        // "ItmTraderBCERKioskTSDOInv","ItmTraderBCRSKioskTSDOInv"
     };
 
     private static string[] OurEntries()

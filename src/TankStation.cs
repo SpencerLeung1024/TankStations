@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace TankStations;
 
+// Tank station behavior
+
 internal static class TankStation
 {
     private const double R = 0.008314000442624092;
@@ -59,31 +61,31 @@ internal static class TankStation
             _fLast = -1.0;
             _lastStatus.Clear();
             return;
-        }
+        } // Ship exists
         CondTrigger condTrigger = DataHandler.GetCondTrigger(InstalledCT);
         if (condTrigger == null)
         {
             return;
-        }
+        } // The mod properly defined the condtrig for an installed tank station
         List<CondOwner> iCOs = ship.GetICOs1(condTrigger, bSubObjects: false, bAllowDocked: false, bAllowLocked: true);
         if (iCOs == null || iCOs.Count == 0)
         {
             _fLast = StarSystem.fEpoch;
             return;
-        }
+        } // At least one installed tank station exists
         double fEpoch = StarSystem.fEpoch;
         if (_fLast < 0.0)
         {
             _fLast = fEpoch;
             return;
-        }
+        } // First Run: set last time and skip
         float num = (float)(fEpoch - _fLast);
         _fLast = fEpoch;
         if (num <= 0f)
         {
             return;
-        }
-        if (num > MaxCatchupSeconds)
+        } // We did not go backwards in time
+        if (num > MaxCatchupSeconds) // If massive time skips occur, cap the maximum calculated flow
         {
             num = MaxCatchupSeconds;
         }
@@ -160,7 +162,7 @@ internal static class TankStation
             LogStatus(station, (list.Count == 0) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : "IDLE: nothing to do (ship's tanks are full, or loaded tanks are empty)", list.Count, 0.0);
             return;
         }
-        double num7 = (double)FlowForTier(num) * (double)dtGame / num6;
+        double num7 = (double)FlowForTier(num) * (double)dtGame / num6; // TODO: Consider lim (n -> inf) (1 + 1/n)^n
         double num8 = 0.0;
         double num9 = 0.0;
         double num10 = 0.0;
@@ -463,11 +465,13 @@ internal static class TankStation
 
     private static void CollectDsts(Ship ship, CondOwner station, List<CondOwner> dstO2, List<CondOwner> dstN2, List<CondOwner> dstHe3, List<CondOwner> dstD2O)
     {
+        // Installed tanks, anywhere on the ship, are valid destinations
         Collect(ship, station, _ctDstO2, dstO2, bGas: true);
-        Collect(ship, station, _ctDstN2, dstN2, bGas: true);
+        Collect(ship, station, _ctDstN2, dstN2, bGas: true); // Different validity for life support N2 than the refuel kiosk. The refuel kiosk does a check for air pumps and what's under them. This tolerates any installed N2 can, even those serving as RCS N2
+        // TODO: I might want to make RCS N2 a higher fill priority than room pressurization N2. If your atmo cans run out your room still has an O2 / N2 mix and you have no immediate effects. If your RCS N2 runs out you're stranded.
         Collect(ship, station, _ctDstHe3, dstHe3, bGas: false);
         Collect(ship, station, _ctDstD2O, dstD2O, bGas: false);
-        foreach (CondOwner item in ship.GetRCSCans())
+        foreach (CondOwner item in ship.GetRCSCans()) // GetRCSCans allows loose N2 cans
         {
             if (item != null && !item.bDestroyed && !(item.ship != ship) && !IsInside(item, station) && item.GasContainer != null && !dstN2.Contains(item))
             {
@@ -489,6 +493,7 @@ internal static class TankStation
         }
         foreach (CondOwner item in iCOs)
         {
+            // Cans that are not destroyed (can hold pressure), on this ship, not inside the tank station's internal inventory, has a gas container if we're inserting O2 or N2, and not already in the list
             if (item != null && !item.bDestroyed && !(item.ship != ship) && !IsInside(item, station) && (!bGas || item.GasContainer != null) && !outp.Contains(item))
             {
                 outp.Add(item);

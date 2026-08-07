@@ -115,7 +115,8 @@
       "ItmPartsElecSmall01=1.0x4",
       "ItmScrapSteel=1.0x3",
       "ItmScrapAluminum=1.0x2",
-      "ItmScrapTrash=1.0x1"
+      "ItmScrapTrash=1.0x1",
+      "ItmMineral79=1.0x1"
     ]
   },
   {
@@ -128,7 +129,8 @@
       "ItmPartsElecSmall01=1.0x4",
       "ItmScrapSteel=1.0x3",
       "ItmScrapAluminum=1.0x2",
-      "ItmScrapTrash=1.0x1"
+      "ItmScrapTrash=1.0x1",
+      "ItmMineral79=1.0x1"
     ]
   }
 ]
