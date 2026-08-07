@@ -1,0 +1,682 @@
+[
+  {
+    "strName": "ItmTankStationT1",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk I",
+    "strDesc": "A compact transfer pump that empties salvaged gas cans into the ship's own tanks. Open its hopper and drop in a single O2 or N2 canister, wire the unit to ship power, and set the panel to AUTO or ON: the can's contents are pumped into your installed tanks and any cans feeding your RCS intakes, stopping just short of maximum safe pressure. The REVERSE toggle dumps a loaded can's contents even when your tanks are full, venting the excess.",
+    "strItemDef": "ItmTankStationT1",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory",
+      "GUITankStation"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsPowered=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT1=1.0x1",
+      "IsContainer=1.0x1",
+      "IsReverse=1.0x1",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x2500.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.1",
+      "StatMass=1.0x30.0",
+      "StatDamageMax=1.0x6",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1",
+      "IsSignalable=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT1",
+    "nContainerHeight": 1,
+    "nContainerWidth": 1,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0",
+      "Electrical,Electrical"
+    ],
+    "mapPoints": [
+      "use,0,16",
+      "PowerA,16,0",
+      "PowerB,-16,0",
+      "PowerC,0,16",
+      "PowerD,0,-16"
+    ],
+    "mapGUIPropMaps": [
+      "Panel A",
+      "TankStationUI",
+      "Electrical"
+    ],
+    "strPortraitImg": "ItmTankStationT1",
+    "aTickers": [
+      "Power"
+    ],
+    "jsonPI": "TankStationT1"
+  },
+  {
+    "strName": "ItmTankStationT1Loose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk I (Loose)",
+    "strDesc": "A compact transfer pump that empties salvaged gas cans into the ship's own tanks, uninstalled. Install it on a clear patch of floor and run a conduit to any tile touching it.",
+    "strItemDef": "ItmTankStationT1Loose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT1=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "StatBasePrice=1.0x2500.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.1",
+      "StatMass=1.0x30.0",
+      "StatDamageMax=1.0x6",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT1Loose"
+  },
+  {
+    "strName": "ItmTankStationT1Dmg",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk I (Damaged)",
+    "strDesc": "A compact transfer pump that empties salvaged gas cans into the ship's own tanks, damaged and inoperable. Repair it to restore function.",
+    "strItemDef": "ItmTankStationT1Dmg",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT1=1.0x1",
+      "IsContainer=1.0x1",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x400.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.1",
+      "StatMass=1.0x30.0",
+      "StatDamageMax=1.0x6",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT1",
+    "nContainerHeight": 1,
+    "nContainerWidth": 1,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapPoints": [
+      "use,0,16"
+    ],
+    "strPortraitImg": "ItmTankStationT1Dmg"
+  },
+  {
+    "strName": "ItmTankStationT1DmgLoose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk I (Damaged, Loose)",
+    "strDesc": "A compact transfer pump that empties salvaged gas cans into the ship's own tanks, uninstalled and damaged. Repair it, then install it on a clear patch of floor.",
+    "strItemDef": "ItmTankStationT1DmgLoose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT1=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "StatBasePrice=1.0x400.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.1",
+      "StatMass=1.0x30.0",
+      "StatDamageMax=1.0x6",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT1DmgLoose"
+  },
+  {
+    "strName": "ItmTankStationT2",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk II",
+    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores. Its bay takes up to nine O2/N2 canisters, or a single large He3 or D2O canister - the only practical way to move fusion fuel between tanks. Wire the unit to ship power and set the panel to AUTO or ON; it pumps until your installed tanks and RCS-intake cans are just short of maximum safe pressure. The REVERSE toggle dumps loaded tanks even when your stores are full, venting the excess.",
+    "strItemDef": "ItmTankStationT2",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory",
+      "GUITankStation"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsPowered=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT2=1.0x1",
+      "IsContainer=1.0x1",
+      "IsReverse=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x30000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x120.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1",
+      "IsSignalable=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0",
+      "Electrical,Electrical"
+    ],
+    "mapPoints": [
+      "use,0,32",
+      "PowerA,16,-32",
+      "PowerB,-16,-32",
+      "PowerC,-16,32",
+      "PowerD,16,32",
+      "PowerE,-32,16",
+      "PowerF,-32,-16",
+      "PowerG,32,16",
+      "PowerH,32,-16"
+    ],
+    "mapGUIPropMaps": [
+      "Panel A",
+      "TankStationUI",
+      "Electrical"
+    ],
+    "strPortraitImg": "ItmTankStationT2",
+    "aTickers": [
+      "Power"
+    ],
+    "jsonPI": "TankStationT2"
+  },
+  {
+    "strName": "ItmTankStationT2Loose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk II (Loose)",
+    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
+    "strItemDef": "ItmTankStationT2Loose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT2=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x30000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x120.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT2Loose"
+  },
+  {
+    "strName": "ItmTankStationT2Dmg",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk II (Damaged)",
+    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, damaged and inoperable. Repair it to restore function.",
+    "strItemDef": "ItmTankStationT2Dmg",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT2=1.0x1",
+      "IsContainer=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x4500.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x120.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapPoints": [
+      "use,0,32"
+    ],
+    "strPortraitImg": "ItmTankStationT2"
+  },
+  {
+    "strName": "ItmTankStationT2DmgLoose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk II (Damaged, Loose)",
+    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
+    "strItemDef": "ItmTankStationT2DmgLoose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT2=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x4500.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x120.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT2Loose"
+  },
+  {
+    "strName": "ItmTankStationT3",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk III",
+    "strDesc": "A long-range transfer station, standard fit on hauler tugs for a reason: in addition to its internal bay, it reaches across a docking clamp and empties tanks aboard a docked ship into your own stores. Hauler crews use it to strip derelicts without ever stepping aboard. Wire it to ship power and set the panel to AUTO or ON. The REVERSE toggle dumps sources even when your tanks are full, venting the excess.",
+    "strItemDef": "ItmTankStationT3",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory",
+      "GUITankStation"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsPowered=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT3=1.0x1",
+      "IsContainer=1.0x1",
+      "IsReverse=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x45000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x140.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1",
+      "IsSignalable=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0",
+      "Electrical,Electrical"
+    ],
+    "mapPoints": [
+      "use,0,32",
+      "PowerA,16,-32",
+      "PowerB,-16,-32",
+      "PowerC,-16,32",
+      "PowerD,16,32",
+      "PowerE,-32,16",
+      "PowerF,-32,-16",
+      "PowerG,32,16",
+      "PowerH,32,-16"
+    ],
+    "mapGUIPropMaps": [
+      "Panel A",
+      "TankStationUI",
+      "Electrical"
+    ],
+    "strPortraitImg": "ItmTankStationT3",
+    "aTickers": [
+      "Power"
+    ],
+    "jsonPI": "TankStationT3"
+  },
+  {
+    "strName": "ItmTankStationT3Loose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk III (Loose)",
+    "strDesc": "A long-range transfer station that can also empty tanks aboard a docked ship, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
+    "strItemDef": "ItmTankStationT3Loose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT3=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x45000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x140.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT3Loose"
+  },
+  {
+    "strName": "ItmTankStationT3Dmg",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk III (Damaged)",
+    "strDesc": "A long-range transfer station that can also empty tanks aboard a docked ship, damaged and inoperable. Repair it to restore function.",
+    "strItemDef": "ItmTankStationT3Dmg",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT3=1.0x1",
+      "IsContainer=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x7000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x140.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapPoints": [
+      "use,0,32"
+    ],
+    "strPortraitImg": "ItmTankStationT3"
+  },
+  {
+    "strName": "ItmTankStationT3DmgLoose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk III (Damaged, Loose)",
+    "strDesc": "A long-range transfer station that can also empty tanks aboard a docked ship, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
+    "strItemDef": "ItmTankStationT3DmgLoose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT3=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x7000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x140.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT3Loose"
+  },
+  {
+    "strName": "ItmTankStationT4",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk IV",
+    "strDesc": "Corsair-tech remote transfer station. On top of everything the Mk III does, the Mk IV locks onto a targeted ship and siphons its reserves across open space - full strength out to about 50 km, fading with range beyond that. RCS reserves vanish first, then fusion fuel. Wire it to ship power and set the panel to AUTO or ON. The REVERSE toggle dumps sources even when your tanks are full, venting the excess.",
+    "strItemDef": "ItmTankStationT4",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory",
+      "GUITankStation"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsPowered=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT4=1.0x1",
+      "IsContainer=1.0x1",
+      "IsReverse=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x80000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x160.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1",
+      "IsSignalable=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0",
+      "Electrical,Electrical"
+    ],
+    "mapPoints": [
+      "use,0,32",
+      "PowerA,16,-32",
+      "PowerB,-16,-32",
+      "PowerC,-16,32",
+      "PowerD,16,32",
+      "PowerE,-32,16",
+      "PowerF,-32,-16",
+      "PowerG,32,16",
+      "PowerH,32,-16"
+    ],
+    "mapGUIPropMaps": [
+      "Panel A",
+      "TankStationUI",
+      "Electrical"
+    ],
+    "strPortraitImg": "ItmTankStationT4",
+    "aTickers": [
+      "Power"
+    ],
+    "jsonPI": "TankStationT4"
+  },
+  {
+    "strName": "ItmTankStationT4Loose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk IV (Loose)",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
+    "strItemDef": "ItmTankStationT4Loose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT4=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x80000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x160.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT4Loose"
+  },
+  {
+    "strName": "ItmTankStationT4Dmg",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk IV (Damaged)",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, damaged and inoperable. Repair it to restore function.",
+    "strItemDef": "ItmTankStationT4Dmg",
+    "strType": "Item",
+    "aInteractions": [
+      "Inventory"
+    ],
+    "aStartingConds": [
+      "IsInstalled=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsTankStation=1.0x1",
+      "IsTankStationT4=1.0x1",
+      "IsContainer=1.0x1",
+      "IsSalvageValueHigh=1.0x1.0",
+      "IsSolid=1.0x1.0",
+      "StatBasePrice=1.0x12000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x160.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapPoints": [
+      "use,0,32"
+    ],
+    "strPortraitImg": "ItmTankStationT4"
+  },
+  {
+    "strName": "ItmTankStationT4DmgLoose",
+    "strNameShort": "Tank Station",
+    "strNameFriendly": "Tank Station Mk IV (Damaged, Loose)",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
+    "strItemDef": "ItmTankStationT4DmgLoose",
+    "strType": "Item",
+    "aInteractions": [
+      "DropItem",
+      "PickupItem"
+    ],
+    "aStartingConds": [
+      "IsTankStation=1.0x1",
+      "IsTankStationT4=1.0x1",
+      "IsDamaged=1.0x1",
+      "IsSolid=1.0x1.0",
+      "IsCumbersome=1.0x1.0",
+      "IsOversized=1.0x1.0",
+      "StatBasePrice=1.0x12000.0",
+      "StatInstallProgressMax=1.0x600",
+      "StatUninstallProgressMax=1.0x600",
+      "StatDismantleProgressMax=1.0x300",
+      "StatRepairProgressMax=1.0x300",
+      "StatVolume=1.0x0.4",
+      "StatMass=1.0x160.0",
+      "StatDamageMax=1.0x8",
+      "IsMechanical=1.0x1",
+      "IsCategoryHVAC=1.0x1"
+    ],
+    "aUpdateCommands": [
+      "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
+    ],
+    "mapSlotEffects": [
+      "drag", "Blank"
+    ],
+    "strPortraitImg": "ItmTankStationT4Loose"
+  }
+]

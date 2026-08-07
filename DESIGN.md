@@ -542,3 +542,42 @@ Pattern from OrbitMarkers (decompiled at `OrbitMarkers/OrbitMarkers/`):
 - User's prior JSON-only mod example: `Ostranauts_Data/Mods/LargeStorageBay`.
 - Ask user before: launching the game. Building writes to `Mods/TankStations/src/{bin,obj}/`
   and the deploy step copies the DLL to live `BepInEx/plugins/TankStations/` — both pre-approved.
+
+---
+
+## 15. Implementation log
+
+### Session 2 (2026-08-06) — milestone 1 built, awaiting first run-time test
+
+- Consolidated dev root into `Ostranauts_Data/Mods/TankStations/` (git repo, commit ea462ec+).
+- Data pack written for ALL tiers: conditions_simple (IsTankStation, IsTankStationT1..T4,
+  IsTankDrainVictim — all hidden 0/0), conditions (StatTankDrainO2/N2/He3/D2O/H2O, bPersists),
+  condtrigs (per-tier Installed/Uninstalled/Dmg CTs + TIsTankStationInstalled OR-wrapper +
+  fit CTs TIsFitTankStationT1/T2 with helpers), items (1x1 T1 / 3x3 T2-4, all 4 variants each),
+  condowners (16 COs modeled on ItmSafePumpTestudo, minus IsHiddenInv so contents stay visible),
+  installables (9/tier, Testudo-cloned), interactions (GUITankStation(+Allow),
+  MSTankStationPowerOn/Off), guipropmaps (TankStationUI → GUIAirPump prefab),
+  powerinfos (TankStationT1..T4), loot (Loose entries + dismantle yields).
+- C# milestone 1: Plugin.cs (config: per-tier flow, tick, kiosk T2 chance, derelict chances,
+  T4 ranges, verbose), TankStation.cs (core transfer loop: internal-hopper sources → ship
+  installed tanks + RCS-intake cans; 99.9% pressure clamp; swept-volume gas rate
+  mols = L/1000 × molSpecies/StatVolume; liquid kg = L/1000 × density; dump = vent excess),
+  KioskStock.cs (T1 always 1-2, T2 at config chance, Testudo's 11 pools, invariant-culture).
+  Builds clean (`dotnet build -c Release src/`), DLL deployed to live `BepInEx/plugins/TankStations/`.
+- **Design deviations (simplifications proven by Testudo Safe Pump):**
+  * On/Off is the vanilla GUIAirPump knob writing IsOverrideOff/IsOverrideOn, surfaced through
+    the Power ticker as `IsPowered` — there is NO IsTankStationRunning cond. Off = knob OFF or
+    unpowered. (`GUIAirPump.cs:124-140`, `Powered.cs:369-388`.)
+  * "Dump From Target" toggle = the panel's Reverse checkbox (`IsReverse` cond shows it,
+    writes `IsReverseOn`). Label reads "REVERSE" in v1 (prefab-hardcoded); documented in
+    item descs + interaction tooltip.
+  * Dmg variants are separate spawn states + repair-flow targets, mirroring Testudo (the
+    Destructable command's 3rd field is a *loot table of interactions* — ACTMechDestroy →
+    MSDestroyMech husk — not an auto-swap to the Dmg CO).
+- Placeholder art: T1 = ItmCanister03* copies; T2-4 = ItmCanisterLHe02Loose/LH02Loosen copies.
+  Replace with real art (per-tier recolors) before release.
+- NOT yet implemented (next milestones): T3 docked-ship sources; T4 shallow-target drain +
+  ledger + Patch_UnregisterShip; Patch_Ship_InitShip (derelict/hauler/COHO spawns + dock
+  reconciliation, §7); Ship's Water soft dep (§10); nav label (§11).
+- Known question for testing: station scan uses `CrewSim.coPlayer.ship` (SafePump precedent) —
+  if coPlayer.ship changes while boarding a derelict, stations pause until you return. Verify.

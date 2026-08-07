@@ -1,0 +1,78 @@
+[
+  {
+    "strName": "TankStationT1",
+    "aInputPts": [
+      "PowerA",
+      "PowerB",
+      "PowerC",
+      "PowerD"
+    ],
+    "fAmount": 0.0008,
+    "strIntPowerOn": "MSTankStationPowerOn",
+    "strIntPowerOff": "MSTankStationPowerOff",
+    "strShutDownCT": "TIsConnctedSignalledOff",
+    "strUsePowerCT": "TIsReadyUsePower",
+    "strRechargeCT": null,
+    "bAllowExtPower": true
+  },
+  {
+    "strName": "TankStationT2",
+    "aInputPts": [
+      "PowerA",
+      "PowerB",
+      "PowerC",
+      "PowerD",
+      "PowerE",
+      "PowerF",
+      "PowerG",
+      "PowerH"
+    ],
+    "fAmount": 0.0024,
+    "strIntPowerOn": "MSTankStationPowerOn",
+    "strIntPowerOff": "MSTankStationPowerOff",
+    "strShutDownCT": "TIsConnctedSignalledOff",
+    "strUsePowerCT": "TIsReadyUsePower",
+    "strRechargeCT": null,
+    "bAllowExtPower": true
+  },
+  {
+    "strName": "TankStationT3",
+    "aInputPts": [
+      "PowerA",
+      "PowerB",
+      "PowerC",
+      "PowerD",
+      "PowerE",
+      "PowerF",
+      "PowerG",
+      "PowerH"
+    ],
+    "fAmount": 0.0032,
+    "strIntPowerOn": "MSTankStationPowerOn",
+    "strIntPowerOff": "MSTankStationPowerOff",
+    "strShutDownCT": "TIsConnctedSignalledOff",
+    "strUsePowerCT": "TIsReadyUsePower",
+    "strRechargeCT": null,
+    "bAllowExtPower": true
+  },
+  {
+    "strName": "TankStationT4",
+    "aInputPts": [
+      "PowerA",
+      "PowerB",
+      "PowerC",
+      "PowerD",
+      "PowerE",
+      "PowerF",
+      "PowerG",
+      "PowerH"
+    ],
+    "fAmount": 0.004,
+    "strIntPowerOn": "MSTankStationPowerOn",
+    "strIntPowerOff": "MSTankStationPowerOff",
+    "strShutDownCT": "TIsConnctedSignalledOff",
+    "strUsePowerCT": "TIsReadyUsePower",
+    "strRechargeCT": null,
+    "bAllowExtPower": true
+  }
+]

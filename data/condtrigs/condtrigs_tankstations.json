@@ -1,0 +1,232 @@
+[
+  {
+    "strName": "TIsTankStationT1Installed",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT1", "IsInstalled" ],
+    "aForbids": [ "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT2Installed",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT2", "IsInstalled" ],
+    "aForbids": [ "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT3Installed",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT3", "IsInstalled" ],
+    "aForbids": [ "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT4Installed",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT4", "IsInstalled" ],
+    "aForbids": [ "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationInstalled",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [],
+    "aForbids": [],
+    "aTriggers": [ "TIsTankStationT1Installed", "TIsTankStationT2Installed", "TIsTankStationT3Installed", "TIsTankStationT4Installed" ],
+    "bAND": false
+  },
+  {
+    "strName": "TIsTankStationT1Uninstalled",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT1" ],
+    "aForbids": [ "IsInstalled", "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT2Uninstalled",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT2" ],
+    "aForbids": [ "IsInstalled", "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT3Uninstalled",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT3" ],
+    "aForbids": [ "IsInstalled", "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT4Uninstalled",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT4" ],
+    "aForbids": [ "IsInstalled", "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT1InstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT1", "IsInstalled", "IsDamaged" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT2InstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT2", "IsInstalled", "IsDamaged" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT3InstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT3", "IsInstalled", "IsDamaged" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT4InstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT4", "IsInstalled", "IsDamaged" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT1UninstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT1", "IsDamaged" ],
+    "aForbids": [ "IsInstalled" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT2UninstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT2", "IsDamaged" ],
+    "aForbids": [ "IsInstalled" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT3UninstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT3", "IsDamaged" ],
+    "aForbids": [ "IsInstalled" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationT4UninstalledDmg",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStationT4", "IsDamaged" ],
+    "aForbids": [ "IsInstalled" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationFitO2",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsVesselO2", "IsRTA" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationFitN2",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsVesselN2", "IsRTA" ],
+    "aForbids": [],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationFitHe3",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsVesselHe3" ],
+    "aForbids": [ "IsRTA" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationFitD2O",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsVesselH2" ],
+    "aForbids": [ "IsRTA" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsFitTankStationT1",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [],
+    "aForbids": [],
+    "aTriggers": [ "TIsTankStationFitO2", "TIsTankStationFitN2" ],
+    "bAND": false
+  },
+  {
+    "strName": "TIsFitTankStationT2",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [],
+    "aForbids": [],
+    "aTriggers": [ "TIsTankStationFitO2", "TIsTankStationFitN2", "TIsTankStationFitHe3", "TIsTankStationFitD2O" ],
+    "bAND": false
+  }
+]

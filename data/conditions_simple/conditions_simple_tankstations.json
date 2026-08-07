@@ -1,0 +1,13 @@
+[
+  {
+    "strName": "Tank Stations Simple Conditions",
+    "aValues": [
+      "IsTankStation","Tank Station","[us] [is] a tank station - a device that empties salvaged gas and liquid tanks into the ship's own tanks.","0","0","Neutral","false",
+      "IsTankStationT1","Tank Station Mk I","[us] [is] a Tank Station Mk I.","0","0","Neutral","false",
+      "IsTankStationT2","Tank Station Mk II","[us] [is] a Tank Station Mk II.","0","0","Neutral","false",
+      "IsTankStationT3","Tank Station Mk III","[us] [is] a Tank Station Mk III.","0","0","Neutral","false",
+      "IsTankStationT4","Tank Station Mk IV","[us] [is] a Tank Station Mk IV.","0","0","Neutral","false",
+      "IsTankDrainVictim","Fuel Drained","[us] [has] had fuel remotely drained by a tank station.","0","0","Neutral","false"
+    ]
+  }
+]

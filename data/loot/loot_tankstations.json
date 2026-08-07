@@ -1,0 +1,134 @@
+[
+  {
+    "strName": "ItmTankStationT1Loose",
+    "aCOs": [
+      "ItmTankStationT1Loose=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "item"
+  },
+  {
+    "strName": "ItmTankStationT2Loose",
+    "aCOs": [
+      "ItmTankStationT2Loose=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "item"
+  },
+  {
+    "strName": "ItmTankStationT3Loose",
+    "aCOs": [
+      "ItmTankStationT3Loose=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "item"
+  },
+  {
+    "strName": "ItmTankStationT4Loose",
+    "aCOs": [
+      "ItmTankStationT4Loose=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "item"
+  },
+  {
+    "strName": "ItmTankStationT1Dismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x1",
+      "ItmPartsMechSmall01=1.0x1",
+      "ItmPartsElecSmall01=1.0x1",
+      "ItmScrapSteel=1.0x1",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT1LooseDismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x1",
+      "ItmPartsMechSmall01=1.0x1",
+      "ItmPartsElecSmall01=1.0x1",
+      "ItmScrapSteel=1.0x1",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT2Dismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x3",
+      "ItmPartsElecSmall01=1.0x2",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT2LooseDismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x3",
+      "ItmPartsElecSmall01=1.0x2",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT3Dismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x3",
+      "ItmPartsElecSmall01=1.0x3",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapAluminum=1.0x1",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT3LooseDismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x3",
+      "ItmPartsElecSmall01=1.0x3",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapAluminum=1.0x1",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT4Dismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x4",
+      "ItmPartsElecSmall01=1.0x4",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapAluminum=1.0x2",
+      "ItmScrapTrash=1.0x1"
+    ]
+  },
+  {
+    "strName": "ItmTankStationT4LooseDismantle",
+    "strType": "item",
+    "aLoots": [],
+    "aCOs": [
+      "ItmComponentMotor01=1.0x2",
+      "ItmPartsMechSmall01=1.0x4",
+      "ItmPartsElecSmall01=1.0x4",
+      "ItmScrapSteel=1.0x3",
+      "ItmScrapAluminum=1.0x2",
+      "ItmScrapTrash=1.0x1"
+    ]
+  }
+]
