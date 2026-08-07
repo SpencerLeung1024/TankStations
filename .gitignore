@@ -1,0 +1,9 @@
+# .NET build output
+src/bin/
+src/obj/
+
+# Editor/OS cruft
+*.user
+.vs/
+.vscode/
+Thumbs.db

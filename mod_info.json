@@ -1,0 +1,10 @@
+[
+  {
+    "strName": "Tank Stations",
+    "strAuthor": "Avix_G",
+    "strModURL": "",
+    "strGameVersion": "1.0.0.7",
+    "strModVersion": "0.0.1",
+    "strNotes": "Adds 4 tiers of tank stations that empty specific tanks to refill your ship's tanks. Tier 1 is 1x1 and accepts a single can. Tier 2 is 3x3 and accepts 9 cans, or 1 large tank. Tier 3 adds the behavior of draining from a docked derelict. Tier 4 adds remote draining from a target locked ship."
+  }
+]
