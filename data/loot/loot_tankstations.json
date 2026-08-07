@@ -1,5 +1,21 @@
 [
   {
+    "strName": "CONDTankStationDumpOn",
+    "aCOs": [
+      "IsTankStationDump=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "condition"
+  },
+  {
+    "strName": "CONDTankStationDumpOff",
+    "aCOs": [
+      "-IsTankStationDump=1.0x1"
+    ],
+    "aLoots": [],
+    "strType": "condition"
+  },
+  {
     "strName": "ItmTankStationT1Loose",
     "aCOs": [
       "ItmTankStationT1Loose=1.0x1"

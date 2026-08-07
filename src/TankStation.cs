@@ -1,19 +1,29 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace TankStations;
 
 // Tank station behavior
+//
+// Every 2 real seconds (configurable) Plugin.Update calls Run(), which finds every installed,
+// undamaged tank station on the player's ship and pumps for it. Each station pumps from its
+// "sources" (salvaged tanks loaded into its hopper by the player) to "destinations" (the ship's
+// own installed tanks, plus any cans feeding RCS intake regulators). Rates are in swept source
+// liters per game-second: gases move mols = L/1000 x (mols of that species / StatVolume), so a
+// source slows exponentially as it empties; liquids move kg = L/1000 x density, constant rate.
+// Destinations are filled to 99.9% of rated max pressure (gases) or volume x density (liquids)
+// so a destination tank can never burst from our pumping.
 
 internal static class TankStation
 {
-    private const double R = 0.008314000442624092;
+    private const double R = 0.008314000442624092; // ideal gas constant, kPa m^3 / (mol K)
 
     private const double DefaultTemp = 293.0;
 
-    private const double FillFraction = 0.999;
+    private const double FillFraction = 0.999; // of StatGasPressureMax; burst margin
 
-    private const double GasFloorMols = 0.01;
+    private const double GasFloorMols = 0.01; // sources below this read as empty
 
     private const double KgFloor = 0.01;
 
@@ -21,35 +31,49 @@ internal static class TankStation
 
     private const float MaxCatchupSeconds = 86400f;
 
-    private const double DensityHe3 = 129.11;
-
-    private const double DensityD2O = 1107.0;
-
     private const string InstalledCT = "TIsTankStationInstalled";
-
-    private const string DstO2CT = "TIsRTAO2Installed";
-
-    private const string DstN2CT = "TIsRTAN2Installed";
-
-    private const string DstHe3CT = "TIsCanisterLHe02Installed";
-
-    private const string DstD2OCT = "TIsCanisterLH02Installed";
 
     private const string PoweredCond = "IsPowered";
 
-    private const string DumpCond = "IsReverseOn";
+    private const string DumpCond = "IsTankStationDump"; // set/cleared by the right-click Dump Mode interactions
+
+    private const string IdleCond = "IsTankStationIdle"; // while set, the powerinfo override drops draw to idle rate
+
+    // One row per transferable resource. Adding a resource (e.g. Ship's Water StatLiqH2O, or
+    // anything the devs add later) means appending one row here instead of another copy of the
+    // four-parallel-variables pattern.
+    private class ResSpec
+    {
+        public string Name; // short label for logs: "O2"
+
+        public string VesselCond; // cond marking a source tank of this resource: "IsVesselO2"
+
+        public string Species; // gas species for GasContainer.AddGasMols; null means liquid (plain cond move)
+
+        public string Stat; // contents cond: "StatGasMolO2" (mols) or "StatSolidHe3" (kg)
+
+        public double Density; // liquids only: kg per m^3 (capacity = StatVolume x Density)
+
+        public string DstCT; // vanilla condtrigger naming this resource's installed destination tanks
+
+        public bool DumpForced; // dump mode forces need to ~infinite (all but O2: NPCs never store O2 at RCS intakes)
+
+        public int MinTier; // stations below this tier won't accept the resource (backstop; the container fit CTs are the real gate)
+    }
+
+    private static readonly ResSpec[] Res = new ResSpec[4]
+    {
+        new ResSpec { Name = "O2", VesselCond = "IsVesselO2", Species = "O2", Stat = "StatGasMolO2", DstCT = "TIsRTAO2Installed", DumpForced = false, MinTier = 1 },
+        new ResSpec { Name = "N2", VesselCond = "IsVesselN2", Species = "N2", Stat = "StatGasMolN2", DstCT = "TIsRTAN2Installed", DumpForced = true, MinTier = 1 },
+        new ResSpec { Name = "He3", VesselCond = "IsVesselHe3", Species = null, Stat = "StatSolidHe3", Density = 129.11, DstCT = "TIsCanisterLHe02Installed", DumpForced = true, MinTier = 2 },
+        new ResSpec { Name = "D2O", VesselCond = "IsVesselH2", Species = null, Stat = "StatLiqD2O", Density = 1107.0, DstCT = "TIsCanisterLH02Installed", DumpForced = true, MinTier = 2 },
+    };
 
     private static double _fLast = -1.0;
 
     private static readonly Dictionary<string, string> _lastStatus = new Dictionary<string, string>();
 
-    private static CondTrigger _ctDstO2;
-
-    private static CondTrigger _ctDstN2;
-
-    private static CondTrigger _ctDstHe3;
-
-    private static CondTrigger _ctDstD2O;
+    private static readonly CondTrigger[] _ctDsts = new CondTrigger[Res.Length];
 
     private static bool _ctsTried;
 
@@ -108,8 +132,8 @@ internal static class TankStation
         {
             return;
         }
-        int num = TierOf(station);
-        if (num == 0)
+        int tier = TierOf(station);
+        if (tier == 0)
         {
             return;
         }
@@ -118,94 +142,109 @@ internal static class TankStation
             LogStatus(station, "IDLE: no power / switched OFF (wire it to power and set the panel to AUTO or ON)", 0, 0.0);
             return;
         }
-        bool flag = station.HasCond(DumpCond);
-        List<CondOwner> list = new List<CondOwner>();
+        bool dump = station.HasCond(DumpCond);
+
+        // Sources: tanks the player loaded into the station's hopper, filtered to what this tier accepts.
+        List<CondOwner> srcs = new List<CondOwner>();
         List<CondOwner> cOsSafe = station.GetCOsSafe(bAllowLocked: false);
         if (cOsSafe != null)
         {
             foreach (CondOwner item in cOsSafe)
             {
-                if (AcceptedSource(item, num))
+                if (SpecOfSource(item, tier) >= 0)
                 {
-                    list.Add(item);
+                    srcs.Add(item);
                 }
             }
         }
+
+        // Destinations: one list per resource, aligned with Res[].
         EnsureCTs();
-        List<CondOwner> list2 = new List<CondOwner>();
-        List<CondOwner> list3 = new List<CondOwner>();
-        List<CondOwner> list4 = new List<CondOwner>();
-        List<CondOwner> list5 = new List<CondOwner>();
+        List<CondOwner>[] dsts = new List<CondOwner>[Res.Length];
+        for (int i = 0; i < Res.Length; i++)
+        {
+            dsts[i] = new List<CondOwner>();
+        }
         Ship ship = station.ship;
         if (ship != null)
         {
-            CollectDsts(ship, station, list2, list3, list4, list5);
+            CollectDsts(ship, station, dsts);
         }
-        double num2 = NeededGas(list2, "StatGasMolO2");
-        double num3 = NeededGas(list3, "StatGasMolN2");
-        double num4 = NeededLiquid(list4, "StatSolidHe3", DensityHe3);
-        double num5 = NeededLiquid(list5, "StatLiqD2O", DensityD2O);
-        if (flag)
+
+        // How much of each resource the ship can currently take (mols for gases, kg for liquids).
+        double[] need = new double[Res.Length];
+        for (int j = 0; j < Res.Length; j++)
         {
-            num3 = (num4 = (num5 = 1000000000.0));
-        }
-        int num6 = 0;
-        foreach (CondOwner item2 in list)
-        {
-            if (SourceActive(item2, num2, num3, num4, num5))
+            need[j] = Needed(dsts[j], Res[j]);
+            if (dump && Res[j].DumpForced)
             {
-                num6++;
+                need[j] = 1000000000.0; // dump mode: pretend the ship can take forever; excess is vented
             }
         }
-        if (num6 == 0)
+
+        int numActive = 0;
+        foreach (CondOwner src in srcs)
         {
-            LogStatus(station, (list.Count == 0) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : "IDLE: nothing to do (ship's tanks are full, or loaded tanks are empty)", list.Count, 0.0);
+            if (SourceActive(src, tier, need))
+            {
+                numActive++;
+            }
+        }
+        if (numActive == 0)
+        {
+            SetIdle(station, true);
+            LogStatus(station, (srcs.Count == 0) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : "IDLE: nothing to do (ship's tanks are full, or loaded tanks are empty)", srcs.Count, 0.0);
             return;
         }
-        double num7 = (double)FlowForTier(num) * (double)dtGame / num6; // TODO: Consider lim (n -> inf) (1 + 1/n)^n
-        double num8 = 0.0;
-        double num9 = 0.0;
-        double num10 = 0.0;
-        double num11 = 0.0;
-        foreach (CondOwner item3 in list)
+
+        // The station's flow is split evenly between active sources. Per tick we apply the simple
+        // linear step (rate x dt), the first-order step of the exact exponential decay
+        // mols x (1 - e^(-k dt)): indistinguishable at sane flow/volume ratios (T1 empties a can in
+        // ~2.6 min), and clamped by availability so a source can never go negative at high flow.
+        double litersEach = (double)FlowForTier(tier) * (double)dtGame / numActive;
+        double[] moved = new double[Res.Length];
+        foreach (CondOwner src in srcs)
         {
-            if (item3 == null || item3.bDestroyed)
+            if (src == null || src.bDestroyed)
             {
                 continue;
             }
-            if (item3.HasCond("IsVesselO2") && num2 > Epsilon)
+            int k = SpecOfSource(src, tier);
+            if (k < 0 || need[k] <= Epsilon)
             {
-                double num12 = MoveGas(item3, "O2", "StatGasMolO2", num7, num2, list2);
-                num8 += num12;
-                num2 -= num12;
+                continue;
             }
-            else if (item3.HasCond("IsVesselN2") && num3 > Epsilon)
-            {
-                double num13 = MoveGas(item3, "N2", "StatGasMolN2", num7, num3, list3);
-                num9 += num13;
-                num3 -= num13;
-            }
-            else if (item3.HasCond("IsVesselHe3") && num4 > Epsilon)
-            {
-                double num14 = MoveLiquid(item3, "StatSolidHe3", DensityHe3, num7, num4, list4);
-                num10 += num14;
-                num4 -= num14;
-            }
-            else if (item3.HasCond("IsVesselH2") && num5 > Epsilon)
-            {
-                double num15 = MoveLiquid(item3, "StatLiqD2O", DensityD2O, num7, num5, list5);
-                num11 += num15;
-                num5 -= num15;
-            }
+            double added = (Res[k].Species != null) ? MoveGas(src, Res[k], litersEach, need[k], dsts[k]) : MoveLiquid(src, Res[k], litersEach, need[k], dsts[k]);
+            moved[k] += added;
+            need[k] -= added;
         }
-        double num16 = num8 + num9 + num10 + num11;
-        if (num16 > Epsilon)
+
+        double total = 0.0;
+        for (int m = 0; m < Res.Length; m++)
         {
-            LogStatus(station, $"PUMPING O2 +{num8:0.###} mol, N2 +{num9:0.###} mol, He3 +{num10:0.###} kg, D2O +{num11:0.###} kg" + (flag ? " (DUMP on)" : ""), list.Count, num16);
+            total += moved[m];
+        }
+        if (total > Epsilon)
+        {
+            SetIdle(station, false);
+            StringBuilder stringBuilder = new StringBuilder("PUMPING");
+            for (int n = 0; n < Res.Length; n++)
+            {
+                if (moved[n] > Epsilon)
+                {
+                    stringBuilder.Append(string.Format(" {0} +{1:0.###} {2}", Res[n].Name, moved[n], (Res[n].Species != null) ? "mol" : "kg"));
+                }
+            }
+            if (dump)
+            {
+                stringBuilder.Append(" (DUMP on)");
+            }
+            LogStatus(station, stringBuilder.ToString(), srcs.Count, total);
         }
         else
         {
-            LogStatus(station, "IDLE: loaded tanks are nearly empty", list.Count, 0.0);
+            SetIdle(station, true);
+            LogStatus(station, "IDLE: loaded tanks are nearly empty", srcs.Count, 0.0);
         }
     }
 
@@ -242,56 +281,51 @@ internal static class TankStation
         };
     }
 
-    private static bool AcceptedSource(CondOwner co, int tier)
+    // Which resource a source tank holds, or -1 if this tier doesn't accept it. Gas sources must
+    // also be RTA cans (matches the container fit CTs); liquids are the big non-RTA canisters.
+    private static int SpecOfSource(CondOwner co, int tier)
     {
         if (co == null || co.bDestroyed)
         {
-            return false;
+            return -1;
         }
-        if (co.HasCond("IsRTA") && (co.HasCond("IsVesselO2") || co.HasCond("IsVesselN2")))
+        for (int i = 0; i < Res.Length; i++)
         {
-            return true;
+            if (tier < Res[i].MinTier || !co.HasCond(Res[i].VesselCond))
+            {
+                continue;
+            }
+            if (Res[i].Species != null && !co.HasCond("IsRTA"))
+            {
+                continue;
+            }
+            return i;
         }
-        if (tier >= 2 && (co.HasCond("IsVesselHe3") || co.HasCond("IsVesselH2")))
-        {
-            return true;
-        }
-        return false;
+        return -1;
     }
 
-    private static bool SourceActive(CondOwner co, double needO2, double needN2, double needHe3, double needD2O)
+    private static bool SourceActive(CondOwner co, int tier, double[] need)
     {
-        if (co == null || co.bDestroyed)
+        int num = SpecOfSource(co, tier);
+        if (num < 0 || need[num] <= Epsilon)
         {
             return false;
         }
-        if (co.HasCond("IsVesselO2"))
-        {
-            return needO2 > Epsilon && co.GetCondAmount("StatGasMolO2") > GasFloorMols + Epsilon;
-        }
-        if (co.HasCond("IsVesselN2"))
-        {
-            return needN2 > Epsilon && co.GetCondAmount("StatGasMolN2") > GasFloorMols + Epsilon;
-        }
-        if (co.HasCond("IsVesselHe3"))
-        {
-            return needHe3 > Epsilon && co.GetCondAmount("StatSolidHe3") > KgFloor + Epsilon;
-        }
-        if (co.HasCond("IsVesselH2"))
-        {
-            return needD2O > Epsilon && co.GetCondAmount("StatLiqD2O") > KgFloor + Epsilon;
-        }
-        return false;
+        double num2 = (Res[num].Species != null) ? GasFloorMols : KgFloor;
+        return co.GetCondAmount(Res[num].Stat) > num2 + Epsilon;
     }
 
-    private static double MoveGas(CondOwner src, string species, string statMol, double liters, double needLeft, List<CondOwner> dsts)
+    // Remove up to `liters` swept-volume worth of gas from the source (mols, partial-pressure
+    // proportional so flow decays as the source empties), then fill destinations in order.
+    // Anything no destination can hold is vented. Returns the amount actually added (not vented).
+    private static double MoveGas(CondOwner src, ResSpec res, double liters, double needLeft, List<CondOwner> dsts)
     {
         GasContainer gasContainer = src.GasContainer;
         if (gasContainer == null)
         {
             return 0.0;
         }
-        double num = src.GetCondAmount(statMol) - GasFloorMols;
+        double num = src.GetCondAmount(res.Stat) - GasFloorMols;
         double condAmount = src.GetCondAmount("StatVolume");
         if (num <= Epsilon || condAmount <= 0.0)
         {
@@ -303,11 +337,11 @@ internal static class TankStation
         {
             return 0.0;
         }
-        gasContainer.AddGasMols(species, 0.0 - num3);
+        gasContainer.AddGasMols(res.Species, 0.0 - num3);
         double num4 = num3;
         foreach (CondOwner dst in dsts)
         {
-            num4 -= AddGas(dst, species, statMol, num4);
+            num4 -= AddGas(dst, res.Species, res.Stat, num4);
             if (num4 <= Epsilon)
             {
                 break;
@@ -337,6 +371,9 @@ internal static class TankStation
         return num2;
     }
 
+    // Room left in a destination, in mols: the lesser of the pressure headroom (mixture-safe -
+    // accounts for other gases already in the tank) and the per-species capacity (guards a stale
+    // or missing StatGasPressure cond). Never lets a tank past FillFraction of its rated max.
     private static double GasRoomMols(CondOwner co, string statMol)
     {
         double num = GasCapMols(co);
@@ -372,24 +409,24 @@ internal static class TankStation
         return FillFraction * condAmount * condAmount2 / (R * num);
     }
 
-    private static double MoveLiquid(CondOwner src, string stat, double density, double liters, double needLeft, List<CondOwner> dsts)
+    private static double MoveLiquid(CondOwner src, ResSpec res, double liters, double needLeft, List<CondOwner> dsts)
     {
-        double num = src.GetCondAmount(stat) - KgFloor;
+        double num = src.GetCondAmount(res.Stat) - KgFloor;
         if (num <= Epsilon)
         {
             return 0.0;
         }
-        double val = liters / 1000.0 * density;
+        double val = liters / 1000.0 * res.Density;
         double num2 = Math.Min(Math.Min(val, num), Math.Max(needLeft, 0.0));
         if (num2 <= Epsilon)
         {
             return 0.0;
         }
-        src.AddCondAmount(stat, 0.0 - num2);
+        src.AddCondAmount(res.Stat, 0.0 - num2);
         double num3 = num2;
         foreach (CondOwner dst in dsts)
         {
-            num3 -= AddLiquid(dst, stat, density, num3);
+            num3 -= AddLiquid(dst, res, num3);
             if (num3 <= Epsilon)
             {
                 break;
@@ -398,19 +435,19 @@ internal static class TankStation
         return num2 - num3;
     }
 
-    private static double AddLiquid(CondOwner dst, string stat, double density, double kg)
+    private static double AddLiquid(CondOwner dst, ResSpec res, double kg)
     {
         if (dst == null || dst.bDestroyed)
         {
             return 0.0;
         }
-        double num = LiquidCapKg(dst, density) - dst.GetCondAmount(stat);
+        double num = LiquidCapKg(dst, res.Density) - dst.GetCondAmount(res.Stat);
         if (num <= Epsilon)
         {
             return 0.0;
         }
         double num2 = Math.Min(num, kg);
-        dst.AddCondAmount(stat, num2);
+        dst.AddCondAmount(res.Stat, num2);
         return num2;
     }
 
@@ -424,27 +461,14 @@ internal static class TankStation
         return condAmount * density;
     }
 
-    private static double NeededGas(List<CondOwner> dsts, string statMol)
+    private static double Needed(List<CondOwner> dsts, ResSpec res)
     {
         double num = 0.0;
         foreach (CondOwner dst in dsts)
         {
             if (dst != null && !dst.bDestroyed)
             {
-                num += GasRoomMols(dst, statMol);
-            }
-        }
-        return num;
-    }
-
-    private static double NeededLiquid(List<CondOwner> dsts, string stat, double density)
-    {
-        double num = 0.0;
-        foreach (CondOwner dst in dsts)
-        {
-            if (dst != null && !dst.bDestroyed)
-            {
-                num += Math.Max(0.0, LiquidCapKg(dst, density) - dst.GetCondAmount(stat));
+                num += ((res.Species != null) ? GasRoomMols(dst, res.Stat) : Math.Max(0.0, LiquidCapKg(dst, res.Density) - dst.GetCondAmount(res.Stat)));
             }
         }
         return num;
@@ -457,25 +481,37 @@ internal static class TankStation
             return;
         }
         _ctsTried = true;
-        _ctDstO2 = DataHandler.GetCondTrigger(DstO2CT);
-        _ctDstN2 = DataHandler.GetCondTrigger(DstN2CT);
-        _ctDstHe3 = DataHandler.GetCondTrigger(DstHe3CT);
-        _ctDstD2O = DataHandler.GetCondTrigger(DstD2OCT);
+        for (int i = 0; i < Res.Length; i++)
+        {
+            _ctDsts[i] = DataHandler.GetCondTrigger(Res[i].DstCT);
+        }
     }
 
-    private static void CollectDsts(Ship ship, CondOwner station, List<CondOwner> dstO2, List<CondOwner> dstN2, List<CondOwner> dstHe3, List<CondOwner> dstD2O)
+    private static void CollectDsts(Ship ship, CondOwner station, List<CondOwner>[] dsts)
     {
-        // Installed tanks, anywhere on the ship, are valid destinations
-        Collect(ship, station, _ctDstO2, dstO2, bGas: true);
-        Collect(ship, station, _ctDstN2, dstN2, bGas: true); // Different validity for life support N2 than the refuel kiosk. The refuel kiosk does a check for air pumps and what's under them. This tolerates any installed N2 can, even those serving as RCS N2
-        // TODO: I might want to make RCS N2 a higher fill priority than room pressurization N2. If your atmo cans run out your room still has an O2 / N2 mix and you have no immediate effects. If your RCS N2 runs out you're stranded.
-        Collect(ship, station, _ctDstHe3, dstHe3, bGas: false);
-        Collect(ship, station, _ctDstD2O, dstD2O, bGas: false);
-        foreach (CondOwner item in ship.GetRCSCans()) // GetRCSCans allows loose N2 cans
+        // Installed tanks, anywhere on the ship, are valid destinations. Note this is more tolerant
+        // than the refuel kiosk's N2 check (air pumps and what's under them): any installed N2 can
+        // counts, even one serving as RCS remass.
+        for (int i = 0; i < Res.Length; i++)
         {
-            if (item != null && !item.bDestroyed && !(item.ship != ship) && !IsInside(item, station) && item.GasContainer != null && !dstN2.Contains(item))
+            Collect(ship, station, _ctDsts[i], dsts[i], Res[i].Species != null);
+        }
+        // Cans loose under RCS intake regulators are N2 destinations too, and get filled FIRST:
+        // if your atmo cans run out, the room keeps its O2/N2 mix for a while - but if your RCS
+        // N2 runs out, you're stranded.
+        foreach (CondOwner item in ship.GetRCSCans())
+        {
+            if (item == null || item.bDestroyed || item.ship != ship || IsInside(item, station) || item.GasContainer == null)
             {
-                dstN2.Add(item);
+                continue;
+            }
+            for (int j = 0; j < Res.Length; j++)
+            {
+                if (Res[j].Name == "N2" && !dsts[j].Contains(item))
+                {
+                    dsts[j].Insert(0, item);
+                    break;
+                }
             }
         }
     }
@@ -493,7 +529,9 @@ internal static class TankStation
         }
         foreach (CondOwner item in iCOs)
         {
-            // Cans that are not destroyed (can hold pressure), on this ship, not inside the tank station's internal inventory, has a gas container if we're inserting O2 or N2, and not already in the list
+            // Cans that are not destroyed (can hold pressure), on this ship, not inside the tank
+            // station's internal inventory, has a gas container if we're inserting gas, and not
+            // already in the list
             if (item != null && !item.bDestroyed && !(item.ship != ship) && !IsInside(item, station) && (!bGas || item.GasContainer != null) && !outp.Contains(item))
             {
                 outp.Add(item);
@@ -511,6 +549,22 @@ internal static class TankStation
             }
         }
         return false;
+    }
+
+    // While idle, the station's powerinfo swaps its power draw to the much smaller override amount
+    // (vanilla mechanism, inverted: the air pump uses it to draw MORE in turbo mode). This gives
+    // "power save when there's nothing to do" without touching the player's panel knob state.
+    private static void SetIdle(CondOwner station, bool idle)
+    {
+        bool flag = station.HasCond(IdleCond);
+        if (idle && !flag)
+        {
+            station.SetCondAmount(IdleCond, 1.0);
+        }
+        else if (!idle && flag)
+        {
+            station.ZeroCondAmount(IdleCond);
+        }
     }
 
     private static void LogStatus(CondOwner station, string text, int srcCount, double moved)

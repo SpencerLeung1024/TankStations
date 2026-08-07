@@ -3,12 +3,14 @@
     "strName": "ItmTankStationT1",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX1\" Tank Station Mk I",
-    "strDesc": "Originally a project to combine an N2 canister and an RCS intake in-house to avoid subcontracting Kang, legal battles forced the GX1 to be redesigned into a compact transfer pump that empties salvaged gas cans into the ship's own tanks. Open its hopper and drop in a single O2 or N2 canister, wire the unit to ship power, and set the panel to AUTO or ON: the can's contents are pumped into your installed tanks and any cans feeding your RCS intakes, stopping just short of maximum safe pressure. The REVERSE toggle dumps a loaded can's contents even when your tanks are full, venting the excess.",
+    "strDesc": "Originally a project to combine an N2 canister and an RCS intake in-house to avoid subcontracting Kang, legal battles forced the GX1 to be redesigned into a compact transfer pump that empties salvaged gas cans into the ship's own tanks. Open its hopper and drop in a single O2 or N2 canister, wire the unit to ship power, and set the panel to AUTO or ON: the can's contents are pumped into your installed tanks and any cans feeding your RCS intakes, stopping just short of maximum safe pressure. With DUMP MODE on (right-click the unit), a loaded can keeps draining even when your tanks are full, venting the excess.",
     "strItemDef": "ItmTankStationT1",
     "strType": "Item",
     "aInteractions": [
       "Inventory",
-      "GUITankStation"
+      "GUITankStation",
+      "TankStationDumpOn",
+      "TankStationDumpOff"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -17,7 +19,6 @@
       "IsTankStation=1.0x1",
       "IsTankStationT1=1.0x1",
       "IsContainer=1.0x1",
-      "IsReverse=1.0x1",
       "IsSolid=1.0x1.0",
       "StatBasePrice=1.0x3000.0",
       "StatInstallProgressMax=1.0x600",
@@ -171,12 +172,14 @@
     "strName": "ItmTankStationT2",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9\" Tank Station Mk II",
-    "strDesc": "After the runaway success of the GX1, Ryokka introduced a full-size transfer station that empties salvaged tanks into the ship's own stores. Its bay takes up to nine O2/N2 canisters, or a single large He3 or D2O canister - the only practical way to move fusion fuel between tanks. Wire the unit to ship power and set the panel to AUTO or ON; it pumps until your installed tanks and RCS-intake cans are just short of maximum safe pressure. The REVERSE toggle dumps loaded tanks even when your stores are full, venting the excess.",
+    "strDesc": "After the runaway success of the GX1, Ryokka introduced a full-size transfer station that empties salvaged tanks into the ship's own stores. Its bay takes up to nine O2/N2 canisters, or a single large He3 or D2O canister - the only practical way to move fusion fuel between tanks. Wire the unit to ship power and set the panel to AUTO or ON; it pumps until your installed tanks and RCS-intake cans are just short of maximum safe pressure. With DUMP MODE on (right-click the unit), loaded tanks keep draining even when your stores are full, venting the excess.",
     "strItemDef": "ItmTankStationT2",
     "strType": "Item",
     "aInteractions": [
       "Inventory",
-      "GUITankStation"
+      "GUITankStation",
+      "TankStationDumpOn",
+      "TankStationDumpOff"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -208,14 +211,10 @@
     ],
     "mapPoints": [
       "use,0,32",
-      "PowerA,16,-32",
-      "PowerB,-16,-32",
-      "PowerC,-16,32",
-      "PowerD,16,32",
-      "PowerE,-32,16",
-      "PowerF,-32,-16",
-      "PowerG,32,16",
-      "PowerH,32,-16"
+      "PowerA,32,0",
+      "PowerB,-32,0",
+      "PowerC,0,32",
+      "PowerD,0,-32"
     ],
     "mapGUIPropMaps": [
       "Panel A",
@@ -347,12 +346,14 @@
     "strName": "ItmTankStationT3",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9+\" Tank Station Mk III",
-    "strDesc": "A long-range transfer station, standard fit on hauler tugs for a reason: in addition to its internal bay, it reaches across a docking clamp and empties tanks aboard a docked ship into your own stores. Hauler crews use it to strip derelicts without ever stepping aboard. Wire it to ship power and set the panel to AUTO or ON. The REVERSE toggle dumps sources even when your tanks are full, venting the excess.",
+    "strDesc": "A long-range transfer station, standard fit on hauler tugs for a reason: in addition to its internal bay, it reaches across a docking clamp and empties tanks aboard a docked ship into your own stores. Hauler crews use it to strip derelicts without ever stepping aboard. Wire it to ship power and set the panel to AUTO or ON. With DUMP MODE on (right-click the unit), sources keep draining even when your tanks are full, venting the excess.",
     "strItemDef": "ItmTankStationT3",
     "strType": "Item",
     "aInteractions": [
       "Inventory",
-      "GUITankStation"
+      "GUITankStation",
+      "TankStationDumpOn",
+      "TankStationDumpOff"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -384,14 +385,10 @@
     ],
     "mapPoints": [
       "use,0,32",
-      "PowerA,16,-32",
-      "PowerB,-16,-32",
-      "PowerC,-16,32",
-      "PowerD,16,32",
-      "PowerE,-32,16",
-      "PowerF,-32,-16",
-      "PowerG,32,16",
-      "PowerH,32,-16"
+      "PowerA,32,0",
+      "PowerB,-32,0",
+      "PowerC,0,32",
+      "PowerD,0,-32"
     ],
     "mapGUIPropMaps": [
       "Panel A",
@@ -523,12 +520,14 @@
     "strName": "ItmTankStationT4",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Corsair \"Vampire\" Tank Station Mk IV",
-    "strDesc": "Some say this is the product of a stolen Ryokka tank station and Belt Pirate ingenuity. Others say it works on witchcraft. On top of everything the Mk III does, the Mk IV locks onto a targeted ship and siphons its reserves across open space. It has a short range and is best used on targets that can't fight back, though its ability to operate at reduced effectiveness beyond engagement ranges is feared by all factions across Ceres. RCS reserves vanish first, then fusion fuel. Wire it to ship power and set the panel to AUTO or ON. The REVERSE toggle dumps sources even when your tanks are full, venting the excess. Useful if you want to leave your target stranded in the black.",
+    "strDesc": "Some say this is the product of a stolen Ryokka tank station and Belt Pirate ingenuity. Others say it works on witchcraft. On top of everything the Mk III does, the Mk IV locks onto a targeted ship and siphons its reserves across open space. It has a short range and is best used on targets that can't fight back, though its ability to operate at reduced effectiveness beyond engagement ranges is feared by all factions across Ceres. RCS reserves vanish first, then fusion fuel. Wire it to ship power and set the panel to AUTO or ON. With DUMP MODE on (right-click the unit), sources keep draining even when your tanks are full, venting the excess. Useful if you want to leave your target stranded in the black.",
     "strItemDef": "ItmTankStationT4",
     "strType": "Item",
     "aInteractions": [
       "Inventory",
-      "GUITankStation"
+      "GUITankStation",
+      "TankStationDumpOn",
+      "TankStationDumpOff"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -559,14 +558,10 @@
     ],
     "mapPoints": [
       "use,0,32",
-      "PowerA,16,-32",
-      "PowerB,-16,-32",
-      "PowerC,-16,32",
-      "PowerD,16,32",
-      "PowerE,-32,16",
-      "PowerF,-32,-16",
-      "PowerG,32,16",
-      "PowerH,32,-16"
+      "PowerA,32,0",
+      "PowerB,-32,0",
+      "PowerC,0,32",
+      "PowerD,0,-32"
     ],
     "mapGUIPropMaps": [
       "Panel A",

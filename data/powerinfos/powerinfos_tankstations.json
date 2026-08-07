@@ -13,7 +13,9 @@
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
-    "bAllowExtPower": true
+    "bAllowExtPower": true,
+    "strOverrideCond": "IsTankStationIdle",
+    "fOverrideAmount": 0.0001
   },
   {
     "strName": "TankStationT2",
@@ -21,11 +23,7 @@
       "PowerA",
       "PowerB",
       "PowerC",
-      "PowerD",
-      "PowerE",
-      "PowerF",
-      "PowerG",
-      "PowerH"
+      "PowerD"
     ],
     "fAmount": 0.0024,
     "strIntPowerOn": "MSTankStationPowerOn",
@@ -33,7 +31,9 @@
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
-    "bAllowExtPower": true
+    "bAllowExtPower": true,
+    "strOverrideCond": "IsTankStationIdle",
+    "fOverrideAmount": 0.0003
   },
   {
     "strName": "TankStationT3",
@@ -41,11 +41,7 @@
       "PowerA",
       "PowerB",
       "PowerC",
-      "PowerD",
-      "PowerE",
-      "PowerF",
-      "PowerG",
-      "PowerH"
+      "PowerD"
     ],
     "fAmount": 0.0032,
     "strIntPowerOn": "MSTankStationPowerOn",
@@ -53,7 +49,9 @@
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
-    "bAllowExtPower": true
+    "bAllowExtPower": true,
+    "strOverrideCond": "IsTankStationIdle",
+    "fOverrideAmount": 0.0004
   },
   {
     "strName": "TankStationT4",
@@ -61,11 +59,7 @@
       "PowerA",
       "PowerB",
       "PowerC",
-      "PowerD",
-      "PowerE",
-      "PowerF",
-      "PowerG",
-      "PowerH"
+      "PowerD"
     ],
     "fAmount": 0.004,
     "strIntPowerOn": "MSTankStationPowerOn",
@@ -73,6 +67,8 @@
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
-    "bAllowExtPower": true
+    "bAllowExtPower": true,
+    "strOverrideCond": "IsTankStationIdle",
+    "fOverrideAmount": 0.0005
   }
 ]

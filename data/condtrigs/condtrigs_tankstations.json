@@ -170,6 +170,26 @@
     "bAND": true
   },
   {
+    "strName": "TIsTankStationNotDumping",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStation", "IsInstalled" ],
+    "aForbids": [ "IsDamaged", "IsTankStationDump" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
+    "strName": "TIsTankStationDumping",
+    "strCondName": "",
+    "fChance": 1.0,
+    "fCount": 1.0,
+    "aReqs": [ "IsTankStation", "IsInstalled", "IsTankStationDump" ],
+    "aForbids": [ "IsDamaged" ],
+    "aTriggers": [],
+    "bAND": true
+  },
+  {
     "strName": "TIsTankStationFitO2",
     "strCondName": "",
     "fChance": 1.0,

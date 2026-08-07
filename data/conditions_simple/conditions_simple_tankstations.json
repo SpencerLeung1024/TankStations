@@ -7,7 +7,9 @@
       "IsTankStationT2","Tank Station Mk II","[us] [is] a Tank Station Mk II.","0","0","Neutral","false",
       "IsTankStationT3","Tank Station Mk III","[us] [is] a Tank Station Mk III.","0","0","Neutral","false",
       "IsTankStationT4","Tank Station Mk IV","[us] [is] a Tank Station Mk IV.","0","0","Neutral","false",
-      "IsTankDrainVictim","Fuel Drained","[us] [has] had fuel remotely drained by a tank station.","0","0","Neutral","false"
+      "IsTankDrainVictim","Fuel Drained","[us] [has] had fuel remotely drained by a tank station.","0","0","Neutral","false",
+      "IsTankStationDump","Dump Mode","[us] [is] set to dump: sources keep draining even when ship tanks are full, venting the excess.","2","2","Neutral","false",
+      "IsTankStationIdle","Idle","[us] [is] idling at reduced power draw.","0","0","Neutral","false"
     ]
   }
 ]

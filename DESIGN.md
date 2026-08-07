@@ -581,3 +581,44 @@ Pattern from OrbitMarkers (decompiled at `OrbitMarkers/OrbitMarkers/`):
   reconciliation, §7); Ship's Water soft dep (§10); nav label (§11).
 - Known question for testing: station scan uses `CrewSim.coPlayer.ship` (SafePump precedent) —
   if coPlayer.ship changes while boarding a derelict, stations pause until you return. Verify.
+
+### Session 2b (2026-08-07) — milestone 1 PASSED in-game; fixes applied
+
+User tested live: pack loads clean, T1/T2 spawn/install/uninstall/transfer/99.9% clamp/kiosk all
+work; He3+D2O transfers work; dump mode works. User edits (commit 6f79e47): GUID
+`com.ostranauts.tankstations`, Ryokka flavor + IsRYO cond, T4 price buffed + ItmMineral79 in T4
+dismantle loot, kiosk pools cut to 4 supplies-only, new config entries HaulerT3Chance (1.0) and
+PirateT4Chance (0.05) — milestones 2-3 must consume these names.
+
+**Changes in 2b (this pass):**
+- Dump toggle MOVED off the GUIAirPump Reverse checkbox (users read "reverse" as pump-back) to
+  right-click interactions `TankStationDumpOn`/`TankStationDumpOff` ("Dump Mode: Start/Stop")
+  applying `±IsTankStationDump` via `LootCondsThem` (vanilla cond-loot mechanism, cf.
+  CONDSitStartThem). New conds: IsTankStationDump (visible chip), IsTankStationIdle (hidden).
+  New CTs TIsTankStationNotDumping/Dumping gate which menu entry shows. IsReverse removed.
+- Idle power save: powerinfos now use `strOverrideCond: IsTankStationIdle` + small
+  `fOverrideAmount` (vanilla mechanism, inverted vs air-pump turbo); C# SetIdle() toggles it.
+  (`Powered.cs:275`: override cond present ⇒ draw = fOverrideAmount instead of fAmount.)
+- T2-4 power points simplified to 4 orthogonal (32,0)/(-32,0)/(0,32)/(0,-32) + PowerA-D inputs
+  (was 8-point "knight's move" pattern).
+- TankStation.cs refactored to a `ResSpec[]` resource table (Name/VesselCond/Species/Stat/
+  Density/DstCT/DumpForced/MinTier) — no more 4-parallel-variables; Ship's Water = +1 row later.
+  RCS-intake cans now inserted FIRST in the N2 dst list (fill priority over room N2; user's TODO).
+- Answers to test-session questions: AUTO vs ON differ only when a signal/sensor is wired
+  (AUTO obeys it, ON forces on; `Powered.cs:269-278`); our code keys on IsPowered so both work.
+  `num/num2/flag/item` naming in reference mods = ILSpy decompiler artifact (locals lose names
+  in compilation); original sources are normal C#. He3 "30 L/tick" observation ≈ 25.8 kg theory
+  (kg/L slip); D2O matched exactly. Kiosk row price = StatBasePrice × kiosk markup.
+
+**Known issues / next session:**
+- Uninstalling a station ejects contents to floor; a big 3x3 canister can VANISH if no 3x3 free
+  floor exists (vanilla content-ejection). Workaround: empty hopper before uninstall. Candidate
+  fix: give Loose variants container fields + Inventory interaction (contents carry over like
+  FFU bins) — needs testing; Testudo chose no-container-loose.
+- T2-4 installed art is the loose He3-canister placeholder (user will do art before release).
+- Shelved (post-release, ask players): selling gas back to stations (GUIStationRefuel slider
+  won't go negative) — potential He3/D2O sell loop.
+- Milestone 2: T3 docked-ship sources (GetAllDockedShips tanks as sources); Patch_Ship_InitShip
+  derelict T1/T2 + hauler T3 spawns (use DerelictT1Chance/DerelictT2Chance/HaulerT3Chance).
+- Milestone 3: T4 shallow-target drain + ShipCO ledger + Patch_UnregisterShip + dock
+  reconciliation (§7); uses PirateT4Chance, T4FullRangeKm/T4MaxRangeKm.
