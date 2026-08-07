@@ -325,7 +325,7 @@ internal static class TankStation
         {
             return 0.0;
         }
-        double num = GasCapMols(dst) - dst.GetCondAmount(statMol);
+        double num = GasRoomMols(dst, statMol);
         if (num <= Epsilon)
         {
             return 0.0;
@@ -333,6 +333,25 @@ internal static class TankStation
         double num2 = Math.Min(num, mols);
         gasContainer.AddGasMols(species, num2);
         return num2;
+    }
+
+    private static double GasRoomMols(CondOwner co, string statMol)
+    {
+        double num = GasCapMols(co);
+        if (num <= 0.0)
+        {
+            return 0.0;
+        }
+        double condAmount = co.GetCondAmount("StatVolume");
+        double num2 = co.GetCondAmount("StatGasTemp");
+        if (num2 <= 0.0)
+        {
+            num2 = DefaultTemp;
+        }
+        double condAmount2 = co.GetCondAmount("StatGasPressureMax");
+        double num3 = Math.Max(0.0, FillFraction * condAmount2 - co.GetCondAmount("StatGasPressure")) * condAmount / (R * num2);
+        double num4 = Math.Max(0.0, num - co.GetCondAmount(statMol));
+        return Math.Min(num3, num4);
     }
 
     private static double GasCapMols(CondOwner co)
@@ -410,7 +429,7 @@ internal static class TankStation
         {
             if (dst != null && !dst.bDestroyed)
             {
-                num += Math.Max(0.0, GasCapMols(dst) - dst.GetCondAmount(statMol));
+                num += GasRoomMols(dst, statMol);
             }
         }
         return num;
