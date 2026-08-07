@@ -1,5 +1,4 @@
-# .NET build output
-src/bin/
+# .NET intermediate build output (src/bin IS tracked on purpose, for reference)
 src/obj/
 
 # Editor/OS cruft

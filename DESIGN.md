@@ -459,11 +459,9 @@ When target `LoadState <= Shallow` (normal at range):
   (game root — the bridge does NOT sync local mods, §0). JSON/data edits need no copy step:
   the mod folder IS the live mod (`Mods/loading_order.json` entry already present).
   Then relaunch game → check `BepInEx/LogOutput.log`. No hot reload.
-- Release: stage a CLEAN copy (mod_info.json, preview.png, BepInEx/plugins/TankStations/
-  TankStations.dll, data/, images/ — NO src/, .git/, bin/) e.g. in `Mods/TankStationsRelease/`
-  + loading_order entry, and upload THAT from the in-game workshop button (the uploader ships
-  the entire folder recursively). Subscribers' bridge preloader mirrors the pack's
-  `BepInEx/plugins/...` into their live plugins.
+- Release: user manually removes `.git/`, `src/`, `bin/` from a copy of the folder before the
+  in-game workshop upload (the uploader ships the entire folder recursively). Subscribers'
+  bridge preloader mirrors the pack's `BepInEx/plugins/...` into their live plugins.
 
 ## 10. Ship's Water (StatLiqH2O) soft dependency
 
