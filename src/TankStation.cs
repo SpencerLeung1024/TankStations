@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TankStations;
@@ -35,9 +36,15 @@ internal static class TankStation
 
     private const string PoweredCond = "IsPowered";
 
-    private const string SlowCond = "IsSlowMode";
+    // GUIAirPump switch STATES (the switches write these; IsSlowMode/IsReverse/IsTurbo without
+    // the "On" suffix are the capability conds that only make the switches visible - GasPump.cs).
+    private const string SlowCond = "IsSlowModeOn";
 
-    private const string ReverseCond = "IsReverse";
+    private const string ReverseCond = "IsReverseOn";
+
+    private const string TurboCond = "IsTurboOn";
+
+    private const string TurboMultCond = "IsTurbo"; // capability cond whose AMOUNT is the flow multiplier (vanilla: 20)
 
     private const string DumpCond = "IsTankStationDump"; // set/cleared by the right-click Dump Mode interactions
 
@@ -148,6 +155,7 @@ internal static class TankStation
         }
         bool reverse = station.GetCondAmount(ReverseCond) > 0.0;
         bool dump = station.HasCond(DumpCond);
+        Ship ship = station.ship;
 
         // Sources: tanks the player loaded into the station's hopper, filtered to what this tier accepts.
         List<CondOwner> srcs = new List<CondOwner>();
@@ -163,14 +171,60 @@ internal static class TankStation
             }
         }
 
-        // Destinations: one list per resource, aligned with Res[].
+        // Tier 3+: tanks on ships docked (or moored) to us are sources too - the station sucks
+        // the clamped-on ship dry. Stations are excluded; anything else docked is fair game.
         EnsureCTs();
+        IReadOnlyList<Ship> allDocked = null;
+        if (tier >= 3 && ship != null)
+        {
+            allDocked = ship.GetAllDockedShips();
+            if (allDocked != null)
+            {
+                foreach (Ship docked in allDocked)
+                {
+                    CollectDockedSources(docked, ship, srcs, tier);
+                }
+            }
+        }
+
+        // Tier 4: the target-locked ship (nav console crosshair) is drained remotely - real
+        // tanks when it's loaded, shallow-field pseudo-sources when it isn't (ShallowFuel).
+        // Skipped in reverse mode: pushing gas INTO shallow bookkeeping is not meaningful.
+        Ship remoteTarget = null;
+        ShallowFuel.TemplateInv remoteInv = null;
+        double remoteFalloff = 1.0;
+        if (tier >= 4 && !reverse && ship != null)
+        {
+            Ship ship2 = GUIOrbitDraw.CrossHairTarget?.Ship;
+            if (ship2 != null && !ship2.bDestroyed && ship2 != ship && !ship2.IsStation() && (allDocked == null || !allDocked.Contains(ship2)))
+            {
+                double num = ship.objSS.GetRangeTo(ship2.objSS) * (double)CrewSim.KM_PER_AU;
+                float value = Plugin.T4FullRangeKm.Value;
+                float value2 = Plugin.T4MaxRangeKm.Value;
+                if (num <= (double)value2)
+                {
+                    if (ship2.LoadState >= Ship.Loaded.Edit)
+                    {
+                        // Loaded target (e.g. previously boarded): drain its real tanks.
+                        // v1: full flow at any in-range distance; falloff applies to shallow only.
+                        CollectDockedSources(ship2, ship, srcs, tier);
+                    }
+                    else
+                    {
+                        remoteTarget = ship2;
+                        remoteInv = ShallowFuel.GetInventory(ship2);
+                        remoteFalloff = ((num <= (double)value) ? 1.0 : Math.Max(0.0, 1.0 - (num - (double)value) / Math.Max(1.0, (double)(value2 - value))));
+                    }
+                }
+            }
+        }
+
+        // Destinations: one list per resource, aligned with Res[].
         List<CondOwner>[] dsts = new List<CondOwner>[Res.Length];
         for (int i = 0; i < Res.Length; i++)
         {
             dsts[i] = new List<CondOwner>();
         }
-        Ship ship = station.ship;
         if (ship != null)
         {
             CollectDsts(ship, station, dsts);
@@ -212,6 +266,8 @@ internal static class TankStation
                     Plugin.Log.LogWarning($"Tank station {station.strID} reverse mode: source {oldsrc.strID} has no matching resource type; skipping it.");
                 }
             }
+            srcs = reversedsrcs;
+            dsts = reverseddsts;
         }
 
         // How much of each resource the ship can currently take (mols for gases, kg for liquids).
@@ -233,6 +289,22 @@ internal static class TankStation
                 numActive++;
             }
         }
+        // Remote pseudo-sources (T4 shallow target) share the station's flow with local sources.
+        bool[] array = new bool[Res.Length];
+        int num2 = 0;
+        if (remoteTarget != null && remoteInv != null)
+        {
+            for (int j = 0; j < Res.Length; j++)
+            {
+                int num3 = ShallowFuel.IdxOf(Res[j].Name);
+                if (num3 >= 0 && need[j] > Epsilon && ShallowFuel.AvailableKg(remoteTarget, remoteInv, num3) > KgFloor)
+                {
+                    array[j] = true;
+                    num2++;
+                }
+            }
+            numActive += num2;
+        }
         if (numActive == 0)
         {
             SetPumping(station, false);
@@ -245,8 +317,18 @@ internal static class TankStation
         // Use the linear step (k * dt) instead of the exact exponential decay (1 - e^(-k * dt))
         // For very large time steps, you can end up moving 100% of the source which is physically impossible
         // But in gameplay terms it doesn't matter and it saves us doing another loop to stake per-tank station flow rates
-        double slowMultiplier = (station.GetCondAmount(SlowCond) > 0.0) ? 0.1 : 1.0;
-        double litersEach = (double)FlowForTier(tier) * slowMultiplier * (double)dtGame / numActive;
+        // Vanilla GasPump semantics (GasPump.Pump): turbo multiplies flow by the IsTurbo cond
+        // amount; slow mode overrides whatever turbo set to a flat 0.1x (slow wins).
+        double flowMult = 1.0;
+        if (station.HasCond(TurboCond))
+        {
+            flowMult = Math.Max(0.0, station.GetCondAmount(TurboMultCond));
+        }
+        if (station.HasCond(SlowCond))
+        {
+            flowMult = 0.1;
+        }
+        double litersEach = (double)FlowForTier(tier) * flowMult * (double)dtGame / numActive;
         double[] moved = new double[Res.Length];
         foreach (CondOwner src in srcs)
         {
@@ -262,6 +344,23 @@ internal static class TankStation
             double added = (Res[k].Species != null) ? MoveGas(src, Res[k], litersEach, need[k], dsts[k]) : MoveLiquid(src, Res[k], litersEach, need[k], dsts[k]);
             moved[k] += added;
             need[k] -= added;
+        }
+
+        // T4 remote drain: each active resource on the shallow target acts as one pseudo-source
+        // at litersEach (scaled by range falloff). Debits shallow fields/ledger, credits dsts.
+        if (remoteTarget != null && num2 > 0)
+        {
+            double num4 = litersEach * remoteFalloff;
+            for (int l = 0; l < Res.Length; l++)
+            {
+                if (array[l] && !(need[l] <= Epsilon))
+                {
+                    int num5 = ShallowFuel.IdxOf(Res[l].Name);
+                    double added2 = ((Res[l].Species != null) ? DrainRemoteGas(remoteTarget, remoteInv, num5, Res[l], num4, need[l], dsts[l]) : DrainRemoteLiquid(remoteTarget, remoteInv, num5, Res[l], num4, need[l], dsts[l]));
+                    moved[l] += added2;
+                    need[l] -= added2;
+                }
+            }
         }
 
         double total = 0.0;
@@ -283,6 +382,10 @@ internal static class TankStation
             if (dump)
             {
                 stringBuilder.Append(" (DUMP on)");
+            }
+            if (remoteTarget != null)
+            {
+                stringBuilder.Append(" remote:" + remoteTarget.strRegID);
             }
             LogStatus(station, stringBuilder.ToString(), srcs.Count, total);
         }
@@ -496,6 +599,64 @@ internal static class TankStation
         return num2;
     }
 
+    // T4 remote versions of MoveGas/MoveLiquid: the source is the shallow target's bookkeeping
+    // (via ShallowFuel) instead of a CO. Fill side is identical; leftover is vented.
+    private static double DrainRemoteGas(Ship target, ShallowFuel.TemplateInv inv, int idx, ResSpec res, double liters, double needLeft, List<CondOwner> dsts)
+    {
+        double num = ShallowFuel.MolarMassOf(idx);
+        double num2 = ShallowFuel.VirtualVolumeM3(inv, idx);
+        if (num <= 0.0 || num2 <= 0.0)
+        {
+            return 0.0;
+        }
+        double num3 = ShallowFuel.AvailableKg(target, inv, idx) / num;
+        if (num3 <= GasFloorMols)
+        {
+            return 0.0;
+        }
+        double num4 = liters / 1000.0 * (num3 / num2);
+        double num5 = Math.Min(Math.Min(num4, num3 - GasFloorMols), Math.Max(needLeft, 0.0));
+        if (num5 <= Epsilon)
+        {
+            return 0.0;
+        }
+        num5 = ShallowFuel.RemoveKg(target, inv, idx, num5 * num) / num;
+        double num6 = num5;
+        foreach (CondOwner dst in dsts)
+        {
+            num6 -= AddGas(dst, res.Species, res.Stat, num6);
+            if (num6 <= Epsilon)
+            {
+                break;
+            }
+        }
+        return num5 - num6;
+    }
+
+    private static double DrainRemoteLiquid(Ship target, ShallowFuel.TemplateInv inv, int idx, ResSpec res, double liters, double needLeft, List<CondOwner> dsts)
+    {
+        double num = Math.Min(Math.Min(liters / 1000.0 * res.Density, ShallowFuel.AvailableKg(target, inv, idx)), Math.Max(needLeft, 0.0));
+        if (num <= Epsilon)
+        {
+            return 0.0;
+        }
+        num = ShallowFuel.RemoveKg(target, inv, idx, num);
+        if (num <= Epsilon)
+        {
+            return 0.0;
+        }
+        double num2 = num;
+        foreach (CondOwner dst in dsts)
+        {
+            num2 -= AddLiquid(dst, res, num2);
+            if (num2 <= Epsilon)
+            {
+                break;
+            }
+        }
+        return num - num2;
+    }
+
     private static double LiquidCapKg(CondOwner co, double density)
     {
         double condAmount = co.GetCondAmount("StatVolume");
@@ -560,6 +721,43 @@ internal static class TankStation
         for (int i = 0; i < Res.Length; i++)
         {
             Collect(ship, station, _ctDsts[i], dsts[i], Res[i].Species != null);
+        }
+    }
+
+    // Tier 3+ source collection from a docked ship: its loose RCS-intake cans plus its installed
+    // tanks, filtered to what the station accepts. Only COs owned by that ship itself (the RCS
+    // raycast uses bAllowDocked:true, so near the airlock it can see OUR cans - skip those).
+    private static void CollectDockedSources(Ship docked, Ship ourShip, List<CondOwner> srcs, int tier)
+    {
+        if (docked == null || docked == ourShip || docked.IsStation())
+        {
+            return;
+        }
+        foreach (CondOwner item in docked.GetRCSCans())
+        {
+            if (item != null && !item.bDestroyed && item.ship == docked && !srcs.Contains(item) && SpecOfSource(item, tier) >= 0)
+            {
+                srcs.Add(item);
+            }
+        }
+        for (int i = 0; i < Res.Length; i++)
+        {
+            if (_ctDsts[i] == null || tier < Res[i].MinTier)
+            {
+                continue;
+            }
+            List<CondOwner> iCOs = docked.GetICOs1(_ctDsts[i], bSubObjects: true, bAllowDocked: false, bAllowLocked: true);
+            if (iCOs == null)
+            {
+                continue;
+            }
+            foreach (CondOwner item in iCOs)
+            {
+                if (item != null && !item.bDestroyed && item.ship == docked && !srcs.Contains(item) && SpecOfSource(item, tier) >= 0)
+                {
+                    srcs.Add(item);
+                }
+            }
         }
     }
 

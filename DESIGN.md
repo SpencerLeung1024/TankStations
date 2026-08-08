@@ -502,6 +502,11 @@ Pattern from OrbitMarkers (decompiled at `OrbitMarkers/OrbitMarkers/`):
   where appropriate (GetICOs1 default) / be explicit.
 - Anything IsAirtight matches TIsRCSValidInput (even EVA suits) — fine, mirrors vanilla.
 - COs must have GasContainer component for AddGasMols (null-check like SafePump).
+- GUIAirPump switches have TWO conds each (GUIAirPump.cs:183-219,345-383; GasPump.Pump):
+  capability conds IsTurbo/IsSlowMode/IsReverse (on the CO def, make the switch VISIBLE) vs
+  state conds IsTurboOn/IsSlowModeOn/IsReverseOn (written by the toggle, bPersists, read by
+  behavior code). Behavior code must read the *On conds. Turbo multiplier = amount of the
+  IsTurbo cond (vanilla turbo pump: 20 via CNDOLAirPump01). If both on, slow wins (0.1x).
 - Deterministic FNV rolls: same regID → same result; use distinct salt per tier/purpose.
 - Keep per-station state keyed by station strID (COs persist across saves; static
   dictionaries keyed by strID, cleaned when CO destroyed — check bDestroyed).
@@ -639,12 +644,86 @@ PirateT4Chance (0.05) — milestones 2-3 must consume these names.
 - - (GUIAirPump) Slow Off/On: 0.1x flow rate. Does not save power.
 - - (GUIAirPump) Reverse Off/On: Switches srcTanks and dstTanks before running the transfer
 - - (Interaction) Dump Mode On/Off: retained from your 2b. It applies the "IsTankStationDump" condition. I've verified that this is retained through save and load.
+- In-game, I can't get Slow or Reverse to do anything. It's like slow is always on and reverse is always off.
 - Unfortunately there seems to be no way to use 0 W other than gating the tank station with a power switch. You can do the same thing with a towing brace to make it use no power, even when secured.
 - In theory I could use "IsOverrideOn" to distinguish auto and on, but I personally don't have a use case for "force pumping action when I know there's no work to do". I might leave this to public feedback.
 - Loose tank stations now have inventories. Damaged (possibly loose) tank stations need to be pried open. I really don't want to chase down the missing 3x3 tank bug and it might involve core game systems, so I'll just guarantee that anything that fits in the installed tank station's inventory will stay there upon uninstall.
+- Interestingly, I can open loose inventories, despite FFU Storage Rebalance supposedly banning that. It's a lot like how I can open the Water Recycler's inventory. Maybe Storage Rebalance only blocks stock equipment.
 - "real" images exist now. I am not an artist and just stole albedo and normals from the N2 can and the He3 tank, but at least visually you can expect the tank station to fit either 9 small tanks or 1 big tank.
 - The use point has been moved to the bottom ("use,0,-16" for T1, "use,0,-32" for others).
 - There is a closed form solution to "how much gas was transfered after x seconds assuming a continuous process": Each active tank station on the ship stakes a L/s flow rate on each src tank, sum all staked flow rate on a src tank, evaluate the exponential, proportion gas moles and liquid masses back to each tank station according to the ratio of their stake. I have decided to keep the linear step instead of solving the exponential. This saves us a loop and in gameplay terms it really doesn't matter, all the player cares about is that src tanks become nearly empty after some time.
 - Right now TankStation.cs logic goes: ItmRTAN2 -> May contain N2, Cannot contain O2, etc. Similarly for ItmRTAO2. In-game there is ItmCanister01, an unlabeled orange gas canister that does not have "IsRTA" or "IsVessel*". There is also ItmRTACO2, the CO2 parallel. CO2 has no use, and no NPC ship spawns with anything in their orange or CO2 cans, or the wrong resource in the wrong can. However, in the course of gameplay, any can can be filled with any gas through an air pump. I can't think of a good way to lump orange cans into tank station logic without inadvertent wasting of non-needed gases.
 - - One "common" use case is using a pump to vacuum out your ship into an orange can before doing renovations. That orange can contains a mix of O2, N2, and CO2. It can later be put under the pump in reverse to repressurize your ship. I say "common" because the cost of food you eat in the time it takes to vacuum out your ship is literally more expensive than the room gas so no actual player does this, but stock ship designs include an air pump and an orange can with this intention.
 - Is there a reason you did MoveGas for each src? That's O(src*dst). Can't you just remove from all src in one loop, then add to all dst in one loop, then dump any remaining resource?
+
+### Session 3 (2026-08-08) — milestones 2+3 implemented; Slow/Reverse fixed; Turbo added
+
+**Slow/Reverse root cause (both were capability/state confusion + a no-op block):** GUIAirPump
+shows a switch when the CO has the *capability* cond (IsSlowMode/IsReverse/IsTurbo) but the
+toggle writes the *state* cond (IsSlowModeOn/IsReverseOn/IsTurboOn — vanilla, bPersists). The
+code read the capability conds → slow read always-on. Reverse additionally built the swapped
+lists but never assigned them back → always-off no-op. Fixed: read IsSlowModeOn/IsReverseOn, swap
+now assigns. Turbo added: `IsTurbo=20.0x1` capability cond on the 4 installed COs; flow ×
+GetCondAmount("IsTurbo") when IsTurboOn, slow wins (mirrors GasPump.Pump). Turbo does NOT raise
+power draw (one strOverrideCond limit, already used by IsTankStationPumping).
+
+**Milestone 2a — T3 docked sources:** tier≥3 adds tanks of every ship in GetAllDockedShips()
+(transitive; stations excluded via IsStation()) to srcs: their RCS-intake cans (GetRCSCans(),
+filtered `item.ship == docked` because the raycast uses bAllowDocked:true and can see OUR cans
+near the airlock) + their installed tanks (per-resource DstCT GetICOs1 on THAT ship). Works in
+reverse too (refuels the docked ship — feature).
+
+**Milestone 2b — Patch_Ship_InitShip (adapted from Testudo, same helper code):** postfix gated on
+aRooms.Count>0 (Edit+ only). Derelicts: T2 roll first (exclusive), then T1 (DerelictT2/T1Chance).
+Haulers: template (json.strName) ∈ {Light Tug, MesaCargo, IbexCargo, Ostrich A8R, Ostrich A4R}
+AND GetShipOwner EndsWith("Hauler") (covers "<stn>Hauler" tugs + "<stn>CargoHauler" cargo).
+Pirates: template ∈ RandomPirateShip set AND owner == "COHOPirates". Spawns are the Loose
+variants with ≤80% wear; FNV1a salts "|tankstationT1..T4"; anti-farm marker IsTankStationSeeded
+on ShipCO (new hidden cond) so a stolen station doesn't respawn on re-dock/re-load. Player's
+current ship + player-owned ships (owner == coPlayer.strID) excluded. Verified facts:
+dictShipOwners IS serialized; ship.json.strName is the template name on fresh spawns; ShipCO
+conds serialize even for shallow ships (GetJSON: json.Clone + shipCO = ShipCO.GetJSONSave()).
+
+**Milestone 3 — T4 remote drain:** target = GUIOrbitDraw.CrossHairTarget.Ship (global namespace),
+range = objSS.GetRangeTo × CrewSim.KM_PER_AU; ≤T4FullRangeKm full flow, linear falloff to
+T4MaxRangeKm, skip when docked-to-us (T3 covers it) or in reverse. Loaded (Edit+) targets: real
+tanks join srcs (v1: full flow in-range, falloff only for shallow). Shallow targets: ShallowFuel.cs
+- TemplateInv per target (cached by regID): totals from the PRISTINE dictShips template (clones at
+  spawn keep editor-baked full values; fallback: live ship.json), dictCOSaves per-CO aConds
+  override def aStartingConds ("DEFAULT" marker expands to def conds; format "Name=1.0xAmount"),
+  N2 cross-checked against fShallowRCSRemassMax (catches cans missed by item enumeration).
+- Fusion kg/s from limiting reactant (D2O:He3 = 0.667:1.0 mass; templates saved full →
+  rate = templateKg/bakedSeconds). He3/D2O drains decrement fShallowFusionRemain by kg/rate with
+  a min-consistency clamp across both reactants. N2 decrements fShallowRCSRemass (AI stops
+  thrusting at 0). O2 is ledger-only (no shallow field exists).
+- Remote gas flow decays like real cans via virtual source volume = mols×R×293/41400 (rated RTA
+  P/T — can-independent identity for StatVolume 0.787).
+- Ledger = StatTankDrain{O2,N2,He3,D2O} kg on target.ShipCO + IsTankDrainVictim marker.
+- Each active remote resource = one pseudo-source sharing the station's flow with local srcs
+  (numActive denominator). Dump mode forces remote need → target vents dry (the T4 fantasy).
+- Even split between resources (design-approved fallback; no torch-vs-RCS prioritization in v1).
+- ReconcileOnLoad (in the InitShip postfix, BEFORE spawn rolls; after BreakIn, before delayed
+  SyncFuel): subtracts ledger from realized tanks (gas via AddGasMols negative — N2 includes
+  GetRCSCans(); liquids via AddCondAmount, floor 0 per can), zeroes all ledger conds, keeps
+  IsTankDrainVictim. SyncFuel then only drains cans toward the ALREADY-reduced
+  fShallowRCSRemass → no double-drain (idempotent).
+- Patch_UnregisterShip.cs: prefixes on the PRIVATE UnregisterShip(AIShip) choke point (covers
+  public wrapper + RegionCleanup + SosOutOfFuel) and FlyTo.TryInstantCleanup (which backdates
+  IsStale WITHOUT going through UnregisterShip). Both gated on new config "Keep Drain Victims"
+  (default true). Victims sit inert; clear the cond or disable config to release them.
+
+**Open items:** Ship's Water soft dep (§10); nav label (§11); loaded-remote falloff; resource
+prioritization; derelict-cleanup paths don't touch victims (victims are live AI ships, not
+derelicts) but a victim far away that the player never visits may still age out via IsStale if
+some other system stamps it — not observed, watch in testing.
+
+**Answers to session-2b questions:** MoveGas per-src is NOT O(src×dst) in practice — the inner
+dst loop breaks as soon as that source's aliquot is placed, so it's O(src + dst) total; pooling
+(removing all then filling) is mathematically identical (same need[] bookkeeping, same dst fill
+order), so the per-src form stays (matches SafePump, makes vented attribution explicit). Orange
+cans (ItmCanister01/ItmRTACO2): correctly excluded — no IsVessel*/fit-CT match; the mixed-gas
+vacuum-can use case is real but out of scope for v1 (a "drain room air" feature would need
+GasInput-point semantics, not vessel CTs).
+
+**Now testable (§13):** items 4 (derelict spawn — set DerelictT1Chance=1.0), 6 (T3 docked drain),
+7 (T4 lock+drain+victim keep-alive), 8 (board drained ship: ledger reconcile, save/load).

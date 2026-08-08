@@ -9,7 +9,8 @@
       "IsTankStationT4","Tank Station Mk IV","[us] [is] a Tank Station Mk IV.","0","0","Neutral","false",
       "IsTankDrainVictim","Fuel Drained","[us] [has] had fuel remotely drained by a tank station.","0","0","Neutral","false",
       "IsTankStationDump","Dump Mode","[us] [is] set to dump: sources keep draining even when ship tanks are full, venting the excess.","2","2","Neutral","false",
-      "IsTankStationPumping","Pumping Activity","[us] [is] actively pumping.","0","0","Neutral","false"
+      "IsTankStationPumping","Pumping Activity","[us] [is] actively pumping.","0","0","Neutral","false",
+      "IsTankStationSeeded","Salvage Checked","[us] [has] already been seeded with tank station salvage.","0","0","Neutral","false"
     ]
   }
 ]
