@@ -7,15 +7,15 @@
       "PowerC",
       "PowerD"
     ],
-    "fAmount": 0.0008,
+    "fAmount": 2.77e-5,
     "strIntPowerOn": "MSTankStationPowerOn",
     "strIntPowerOff": "MSTankStationPowerOff",
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
     "bAllowExtPower": true,
-    "strOverrideCond": "IsTankStationIdle",
-    "fOverrideAmount": 0.0001
+    "strOverrideCond": "IsTankStationPumping",
+    "fOverrideAmount": 0.0008
   },
   {
     "strName": "TankStationT2",
@@ -25,15 +25,15 @@
       "PowerC",
       "PowerD"
     ],
-    "fAmount": 0.0024,
+    "fAmount": 2.77e-5,
     "strIntPowerOn": "MSTankStationPowerOn",
     "strIntPowerOff": "MSTankStationPowerOff",
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
     "bAllowExtPower": true,
-    "strOverrideCond": "IsTankStationIdle",
-    "fOverrideAmount": 0.0003
+    "strOverrideCond": "IsTankStationPumping",
+    "fOverrideAmount": 0.0024
   },
   {
     "strName": "TankStationT3",
@@ -43,15 +43,15 @@
       "PowerC",
       "PowerD"
     ],
-    "fAmount": 0.0032,
+    "fAmount": 2.77e-5,
     "strIntPowerOn": "MSTankStationPowerOn",
     "strIntPowerOff": "MSTankStationPowerOff",
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
     "bAllowExtPower": true,
-    "strOverrideCond": "IsTankStationIdle",
-    "fOverrideAmount": 0.0004
+    "strOverrideCond": "IsTankStationPumping",
+    "fOverrideAmount": 0.0032
   },
   {
     "strName": "TankStationT4",
@@ -61,14 +61,14 @@
       "PowerC",
       "PowerD"
     ],
-    "fAmount": 0.004,
+    "fAmount": 2.77e-5,
     "strIntPowerOn": "MSTankStationPowerOn",
     "strIntPowerOff": "MSTankStationPowerOff",
     "strShutDownCT": "TIsConnctedSignalledOff",
     "strUsePowerCT": "TIsReadyUsePower",
     "strRechargeCT": null,
     "bAllowExtPower": true,
-    "strOverrideCond": "IsTankStationIdle",
-    "fOverrideAmount": 0.0005
+    "strOverrideCond": "IsTankStationPumping",
+    "fOverrideAmount": 0.004
   }
 ]

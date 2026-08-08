@@ -35,9 +35,13 @@ internal static class TankStation
 
     private const string PoweredCond = "IsPowered";
 
+    private const string SlowCond = "IsSlowMode";
+
+    private const string ReverseCond = "IsReverse";
+
     private const string DumpCond = "IsTankStationDump"; // set/cleared by the right-click Dump Mode interactions
 
-    private const string IdleCond = "IsTankStationIdle"; // while set, the powerinfo override drops draw to idle rate
+    private const string PumpingCond = "IsTankStationPumping"; // while set, the powerinfo override is active
 
     // One row per transferable resource. Adding a resource (e.g. Ship's Water StatLiqH2O, or
     // anything the devs add later) means appending one row here instead of another copy of the
@@ -142,6 +146,7 @@ internal static class TankStation
             LogStatus(station, "IDLE: no power / switched OFF (wire it to power and set the panel to AUTO or ON)", 0, 0.0);
             return;
         }
+        bool reverse = station.GetCondAmount(ReverseCond) > 0.0;
         bool dump = station.HasCond(DumpCond);
 
         // Sources: tanks the player loaded into the station's hopper, filtered to what this tier accepts.
@@ -171,6 +176,44 @@ internal static class TankStation
             CollectDsts(ship, station, dsts);
         }
 
+        // If in reverse mode, swap srcs and dsts
+        if (reverse)
+        {
+            // For dsts -> srcs, just flatten the list
+            List<CondOwner> reversedsrcs = new List<CondOwner>();
+            foreach (List<CondOwner> list in dsts)
+            {
+                if (list != null)
+                {
+                    reversedsrcs.AddRange(list);
+                }
+            }
+            // For srcs -> dsts, we need to place each source into the dst of the right type
+            List<CondOwner>[] reverseddsts = new List<CondOwner>[Res.Length];
+            for (int residx = 0; residx < Res.Length; residx++)
+            {
+                reverseddsts[residx] = new List<CondOwner>();
+            }
+            for (int oldsrcidx = 0; oldsrcidx < srcs.Count; oldsrcidx++)
+            {
+                CondOwner oldsrc = srcs[oldsrcidx];
+                bool placed = false;
+                for (int residx = 0; residx < Res.Length; residx++)
+                {
+                    if (oldsrc.HasCond(Res[residx].VesselCond))
+                    {
+                        reverseddsts[residx].Add(oldsrc);
+                        placed = true;
+                        break;
+                    }
+                }
+                if (!placed)
+                {
+                    Plugin.Log.LogWarning($"Tank station {station.strID} reverse mode: source {oldsrc.strID} has no matching resource type; skipping it.");
+                }
+            }
+        }
+
         // How much of each resource the ship can currently take (mols for gases, kg for liquids).
         double[] need = new double[Res.Length];
         for (int j = 0; j < Res.Length; j++)
@@ -192,16 +235,18 @@ internal static class TankStation
         }
         if (numActive == 0)
         {
-            SetIdle(station, true);
+            SetPumping(station, false);
             LogStatus(station, (srcs.Count == 0) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : "IDLE: nothing to do (ship's tanks are full, or loaded tanks are empty)", srcs.Count, 0.0);
             return;
         }
 
-        // The station's flow is split evenly between active sources. Per tick we apply the simple
-        // linear step (rate x dt), the first-order step of the exact exponential decay
-        // mols x (1 - e^(-k dt)): indistinguishable at sane flow/volume ratios (T1 empties a can in
-        // ~2.6 min), and clamped by availability so a source can never go negative at high flow.
-        double litersEach = (double)FlowForTier(tier) * (double)dtGame / numActive;
+        // The station's flow is split evenly between active sources
+        // Volume of source is irrelevant. Small gas cans and large liquid tanks are drawn from equally
+        // Use the linear step (k * dt) instead of the exact exponential decay (1 - e^(-k * dt))
+        // For very large time steps, you can end up moving 100% of the source which is physically impossible
+        // But in gameplay terms it doesn't matter and it saves us doing another loop to stake per-tank station flow rates
+        double slowMultiplier = (station.GetCondAmount(SlowCond) > 0.0) ? 0.1 : 1.0;
+        double litersEach = (double)FlowForTier(tier) * slowMultiplier * (double)dtGame / numActive;
         double[] moved = new double[Res.Length];
         foreach (CondOwner src in srcs)
         {
@@ -226,7 +271,7 @@ internal static class TankStation
         }
         if (total > Epsilon)
         {
-            SetIdle(station, false);
+            SetPumping(station, true);
             StringBuilder stringBuilder = new StringBuilder("PUMPING");
             for (int n = 0; n < Res.Length; n++)
             {
@@ -243,7 +288,7 @@ internal static class TankStation
         }
         else
         {
-            SetIdle(station, true);
+            SetPumping(station, false);
             LogStatus(station, "IDLE: loaded tanks are nearly empty", srcs.Count, 0.0);
         }
     }
@@ -458,7 +503,7 @@ internal static class TankStation
         {
             return 0.0;
         }
-        return condAmount * density;
+        return FillFraction * condAmount * density;
     }
 
     private static double Needed(List<CondOwner> dsts, ResSpec res)
@@ -489,30 +534,32 @@ internal static class TankStation
 
     private static void CollectDsts(Ship ship, CondOwner station, List<CondOwner>[] dsts)
     {
-        // Installed tanks, anywhere on the ship, are valid destinations. Note this is more tolerant
-        // than the refuel kiosk's N2 check (air pumps and what's under them): any installed N2 can
-        // counts, even one serving as RCS remass.
+        // Loose cans under RCS intake regulators are N2 destinations too, and get filled FIRST:
+        // if your atmo cans run out, the room keeps its O2/N2 mix for a while
+        // but if your RCS N2 runs out, you're stranded.
+        int indexOfN2 = -1; // TODO: Consider caching this
         for (int i = 0; i < Res.Length; i++)
         {
-            Collect(ship, station, _ctDsts[i], dsts[i], Res[i].Species != null);
+            if (Res[i].Name == "N2")
+            {
+                indexOfN2 = i;
+                break;
+            }
         }
-        // Cans loose under RCS intake regulators are N2 destinations too, and get filled FIRST:
-        // if your atmo cans run out, the room keeps its O2/N2 mix for a while - but if your RCS
-        // N2 runs out, you're stranded.
         foreach (CondOwner item in ship.GetRCSCans())
         {
             if (item == null || item.bDestroyed || item.ship != ship || IsInside(item, station) || item.GasContainer == null)
             {
                 continue;
             }
-            for (int j = 0; j < Res.Length; j++)
-            {
-                if (Res[j].Name == "N2" && !dsts[j].Contains(item))
-                {
-                    dsts[j].Insert(0, item);
-                    break;
-                }
-            }
+            dsts[indexOfN2].Add(item);
+        }
+        // Installed tanks, anywhere on the ship, are valid destinations. Note this is more tolerant
+        // than the refuel kiosk's N2 check (air pumps and what's under them): any installed N2 can
+        // counts, even one serving as RCS remass.
+        for (int i = 0; i < Res.Length; i++)
+        {
+            Collect(ship, station, _ctDsts[i], dsts[i], Res[i].Species != null);
         }
     }
 
@@ -551,19 +598,18 @@ internal static class TankStation
         return false;
     }
 
-    // While idle, the station's powerinfo swaps its power draw to the much smaller override amount
-    // (vanilla mechanism, inverted: the air pump uses it to draw MORE in turbo mode). This gives
-    // "power save when there's nothing to do" without touching the player's panel knob state.
-    private static void SetIdle(CondOwner station, bool idle)
+    // Only have the full power draw when there is something to pump
+    // Otherwise use a base amount of power for doing checks
+    private static void SetPumping(CondOwner station, bool pumping)
     {
-        bool flag = station.HasCond(IdleCond);
-        if (idle && !flag)
+        bool flag = station.HasCond(PumpingCond);
+        if (pumping && !flag)
         {
-            station.SetCondAmount(IdleCond, 1.0);
+            station.SetCondAmount(PumpingCond, 1.0);
         }
-        else if (!idle && flag)
+        else if (!pumping && flag)
         {
-            station.ZeroCondAmount(IdleCond);
+            station.ZeroCondAmount(PumpingCond);
         }
     }
 

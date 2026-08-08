@@ -622,3 +622,29 @@ PirateT4Chance (0.05) — milestones 2-3 must consume these names.
   derelict T1/T2 + hauler T3 spawns (use DerelictT1Chance/DerelictT2Chance/HaulerT3Chance).
 - Milestone 3: T4 shallow-target drain + ShipCO ledger + Patch_UnregisterShip + dock
   reconciliation (§7); uses PirateT4Chance, T4FullRangeKm/T4MaxRangeKm.
+
+### Manual Exploration (2026-08-07)
+- Sometimes, if you want something done the way you want, you gotta be the one to dig and implement.
+- Added `Ostranauts/.gitignore` (outside the TankStations mod folder) that ignores the ship folder so searching a term doesn't return 10000+ results
+- Tried to use "aInteractions" "ACTTogglePower" used by ItmSwitch01 and ItmToolWorkLamp01. It seems to not work when put on random mod equipment. I don't know what part of the code runs it. I noticed both ItmSwitch01 and TimToolWorkLamp01 have two condowners: on and off, where the off condowner has "IsOff=1.0x1".
+- I looked into GUIAirPump.cs. It has three switches: Turbo, Slow, and Reverse. It checks the condowner whether the conditions "IsTurbo", "IsSlowMode", and "IsReverse" exist, and only shows those switches if so.
+- I'd like to do the extra work to implement turbo (20x flow rate on the stock Turbo Air Pump, oddly defined in "CNDOLAirPump01" in loot.json for some reason) and slow (0.1x flow rate). See GasPump.cs, 234-241.
+- Unfortunately, powerinfos.json only accepts *one* "strOverrideCond" and "fOverrideAmount". I'm already using my normal and override states for idle and pumping.
+- I switched it around from last night. "fAmount" is now idle power draw (flat 100 W) and "fOverrideAmount" is now pumping power draw (2880 W, 8640 W, 11520 W, 14400 W).
+- An alternative way to support different power draws (including more than 2, although no stock device has more than 2) is a different condowner for every power state.
+- "TowingBrace01" has "fAmount": 5e-6 (18 W), "TowingBrace01Secured" has "fAmount": 0.033 (118800 W).
+- But I don't want to deal with combinatorics.
+- I've settled on the following:
+- - (GUIAirPump) Off/Auto/On: Off = 100 W, auto or on = barely any work to do ? 100 W and do nothing : 1x base power draw and pump
+- - (GUIAirPump) Slow Off/On: 0.1x flow rate. Does not save power.
+- - (GUIAirPump) Reverse Off/On: Switches srcTanks and dstTanks before running the transfer
+- - (Interaction) Dump Mode On/Off: retained from your 2b. It applies the "IsTankStationDump" condition. I've verified that this is retained through save and load.
+- Unfortunately there seems to be no way to use 0 W other than gating the tank station with a power switch. You can do the same thing with a towing brace to make it use no power, even when secured.
+- In theory I could use "IsOverrideOn" to distinguish auto and on, but I personally don't have a use case for "force pumping action when I know there's no work to do". I might leave this to public feedback.
+- Loose tank stations now have inventories. Damaged (possibly loose) tank stations need to be pried open. I really don't want to chase down the missing 3x3 tank bug and it might involve core game systems, so I'll just guarantee that anything that fits in the installed tank station's inventory will stay there upon uninstall.
+- "real" images exist now. I am not an artist and just stole albedo and normals from the N2 can and the He3 tank, but at least visually you can expect the tank station to fit either 9 small tanks or 1 big tank.
+- The use point has been moved to the bottom ("use,0,-16" for T1, "use,0,-32" for others).
+- There is a closed form solution to "how much gas was transfered after x seconds assuming a continuous process": Each active tank station on the ship stakes a L/s flow rate on each src tank, sum all staked flow rate on a src tank, evaluate the exponential, proportion gas moles and liquid masses back to each tank station according to the ratio of their stake. I have decided to keep the linear step instead of solving the exponential. This saves us a loop and in gameplay terms it really doesn't matter, all the player cares about is that src tanks become nearly empty after some time.
+- Right now TankStation.cs logic goes: ItmRTAN2 -> May contain N2, Cannot contain O2, etc. Similarly for ItmRTAO2. In-game there is ItmCanister01, an unlabeled orange gas canister that does not have "IsRTA" or "IsVessel*". There is also ItmRTACO2, the CO2 parallel. CO2 has no use, and no NPC ship spawns with anything in their orange or CO2 cans, or the wrong resource in the wrong can. However, in the course of gameplay, any can can be filled with any gas through an air pump. I can't think of a good way to lump orange cans into tank station logic without inadvertent wasting of non-needed gases.
+- - One "common" use case is using a pump to vacuum out your ship into an orange can before doing renovations. That orange can contains a mix of O2, N2, and CO2. It can later be put under the pump in reverse to repressurize your ship. I say "common" because the cost of food you eat in the time it takes to vacuum out your ship is literally more expensive than the room gas so no actual player does this, but stock ship designs include an air pump and an orange can with this intention.
+- Is there a reason you did MoveGas for each src? That's O(src*dst). Can't you just remove from all src in one loop, then add to all dst in one loop, then dump any remaining resource?

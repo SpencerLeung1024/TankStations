@@ -19,6 +19,8 @@
       "IsTankStation=1.0x1",
       "IsTankStationT1=1.0x1",
       "IsContainer=1.0x1",
+      "IsReverse=1.0x1",
+      "IsSlowMode=1.0x1",
       "IsSolid=1.0x1.0",
       "StatBasePrice=1.0x3000.0",
       "StatInstallProgressMax=1.0x600",
@@ -39,7 +41,7 @@
       "Electrical,Electrical"
     ],
     "mapPoints": [
-      "use,0,16",
+      "use,0,-16",
       "PowerA,16,0",
       "PowerB,-16,0",
       "PowerC,0,16",
@@ -64,6 +66,7 @@
     "strItemDef": "ItmTankStationT1Loose",
     "strType": "Item",
     "aInteractions": [
+      "Inventory",
       "DropItem",
       "PickupItem"
     ],
@@ -83,6 +86,9 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT1",
+    "nContainerHeight": 1,
+    "nContainerWidth": 1,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
@@ -99,7 +105,7 @@
     "strItemDef": "ItmTankStationT1Dmg",
     "strType": "Item",
     "aInteractions": [
-      "Inventory"
+      "ACTPryOpen"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -127,7 +133,7 @@
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapPoints": [
-      "use,0,16"
+      "use,0,-16"
     ],
     "strPortraitImg": "ItmTankStationT1Dmg"
   },
@@ -139,6 +145,7 @@
     "strItemDef": "ItmTankStationT1DmgLoose",
     "strType": "Item",
     "aInteractions": [
+      "ACTPryOpen",
       "DropItem",
       "PickupItem"
     ],
@@ -160,6 +167,9 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT1",
+    "nContainerHeight": 1,
+    "nContainerWidth": 1,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
@@ -189,6 +199,7 @@
       "IsTankStationT2=1.0x1",
       "IsContainer=1.0x1",
       "IsReverse=1.0x1",
+      "IsSlowMode=1.0x1",
       "IsSalvageValueHigh=1.0x1.0",
       "IsSolid=1.0x1.0",
       "StatBasePrice=1.0x30000.0",
@@ -210,7 +221,7 @@
       "Electrical,Electrical"
     ],
     "mapPoints": [
-      "use,0,32",
+      "use,0,-32",
       "PowerA,32,0",
       "PowerB,-32,0",
       "PowerC,0,32",
@@ -235,6 +246,7 @@
     "strItemDef": "ItmTankStationT2Loose",
     "strType": "Item",
     "aInteractions": [
+      "Inventory",
       "DropItem",
       "PickupItem"
     ],
@@ -255,6 +267,9 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
@@ -271,7 +286,7 @@
     "strItemDef": "ItmTankStationT2Dmg",
     "strType": "Item",
     "aInteractions": [
-      "Inventory"
+      "ACTPryOpen"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -300,9 +315,9 @@
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapPoints": [
-      "use,0,32"
+      "use,0,-32"
     ],
-    "strPortraitImg": "ItmTankStationT2"
+    "strPortraitImg": "ItmTankStationT2Dmg"
   },
   {
     "strName": "ItmTankStationT2DmgLoose",
@@ -312,6 +327,7 @@
     "strItemDef": "ItmTankStationT2DmgLoose",
     "strType": "Item",
     "aInteractions": [
+      "ACTPryOpen",
       "DropItem",
       "PickupItem"
     ],
@@ -334,13 +350,16 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapSlotEffects": [
       "drag", "Blank"
     ],
-    "strPortraitImg": "ItmTankStationT2Loose"
+    "strPortraitImg": "ItmTankStationT2DmgLoose"
   },
   {
     "strName": "ItmTankStationT3",
@@ -363,6 +382,7 @@
       "IsTankStationT3=1.0x1",
       "IsContainer=1.0x1",
       "IsReverse=1.0x1",
+      "IsSlowMode=1.0x1",
       "IsSalvageValueHigh=1.0x1.0",
       "IsSolid=1.0x1.0",
       "StatBasePrice=1.0x45000.0",
@@ -384,7 +404,7 @@
       "Electrical,Electrical"
     ],
     "mapPoints": [
-      "use,0,32",
+      "use,0,-32",
       "PowerA,32,0",
       "PowerB,-32,0",
       "PowerC,0,32",
@@ -409,6 +429,7 @@
     "strItemDef": "ItmTankStationT3Loose",
     "strType": "Item",
     "aInteractions": [
+      "Inventory",
       "DropItem",
       "PickupItem"
     ],
@@ -429,6 +450,9 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
@@ -445,7 +469,7 @@
     "strItemDef": "ItmTankStationT3Dmg",
     "strType": "Item",
     "aInteractions": [
-      "Inventory"
+      "ACTPryOpen"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -474,9 +498,9 @@
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapPoints": [
-      "use,0,32"
+      "use,0,-32"
     ],
-    "strPortraitImg": "ItmTankStationT3"
+    "strPortraitImg": "ItmTankStationT3Dmg"
   },
   {
     "strName": "ItmTankStationT3DmgLoose",
@@ -486,6 +510,7 @@
     "strItemDef": "ItmTankStationT3DmgLoose",
     "strType": "Item",
     "aInteractions": [
+      "ACTPryOpen",
       "DropItem",
       "PickupItem"
     ],
@@ -508,13 +533,16 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapSlotEffects": [
       "drag", "Blank"
     ],
-    "strPortraitImg": "ItmTankStationT3Loose"
+    "strPortraitImg": "ItmTankStationT3DmgLoose"
   },
   {
     "strName": "ItmTankStationT4",
@@ -536,6 +564,7 @@
       "IsTankStationT4=1.0x1",
       "IsContainer=1.0x1",
       "IsReverse=1.0x1",
+      "IsSlowMode=1.0x1",
       "IsSalvageValueHigh=1.0x1.0",
       "IsSolid=1.0x1.0",
       "StatBasePrice=1.0x400000.0",
@@ -557,7 +586,7 @@
       "Electrical,Electrical"
     ],
     "mapPoints": [
-      "use,0,32",
+      "use,0,-32",
       "PowerA,32,0",
       "PowerB,-32,0",
       "PowerC,0,32",
@@ -582,6 +611,7 @@
     "strItemDef": "ItmTankStationT4Loose",
     "strType": "Item",
     "aInteractions": [
+      "Inventory",
       "DropItem",
       "PickupItem"
     ],
@@ -601,6 +631,9 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
@@ -617,7 +650,7 @@
     "strItemDef": "ItmTankStationT4Dmg",
     "strType": "Item",
     "aInteractions": [
-      "Inventory"
+      "ACTPryOpen"
     ],
     "aStartingConds": [
       "IsInstalled=1.0x1",
@@ -645,9 +678,9 @@
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapPoints": [
-      "use,0,32"
+      "use,0,-32"
     ],
-    "strPortraitImg": "ItmTankStationT4"
+    "strPortraitImg": "ItmTankStationT4Dmg"
   },
   {
     "strName": "ItmTankStationT4DmgLoose",
@@ -657,6 +690,7 @@
     "strItemDef": "ItmTankStationT4DmgLoose",
     "strType": "Item",
     "aInteractions": [
+      "ACTPryOpen",
       "DropItem",
       "PickupItem"
     ],
@@ -678,12 +712,15 @@
       "IsMechanical=1.0x1",
       "IsCategoryHVAC=1.0x1"
     ],
+    "strContainerCT": "TIsFitTankStationT2",
+    "nContainerHeight": 3,
+    "nContainerWidth": 3,
     "aUpdateCommands": [
       "Destructable,StatDamage,ACTMechDestroy,StatDamageMax,1.0"
     ],
     "mapSlotEffects": [
       "drag", "Blank"
     ],
-    "strPortraitImg": "ItmTankStationT4Loose"
+    "strPortraitImg": "ItmTankStationT4DmgLoose"
   }
 ]
