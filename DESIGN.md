@@ -728,7 +728,7 @@ GasInput-point semantics, not vessel CTs).
 **Now testable (§13):** items 4 (derelict spawn — set DerelictT1Chance=1.0), 6 (T3 docked drain),
 7 (T4 lock+drain+victim keep-alive), 8 (board drained ship: ledger reconcile, save/load).
 
-### Testing (2028-08-08)
+### Testing (2026-08-08)
 - Oh, uh, maybe I shouldn't have been so wordy. My meaning above is "If I could have more than two power states, I would add turbo and make it use more than 100% base power. In the absence of more than one 'strOverrideCond', I am fine with having no turbo and only a slow mode that does not save power."
 - You went ahead and plugged in turbo (20x flow rate for no additional power draw), which I guess is okay. It's always better to give the player more options (I want to fully drain this tank NOW) and let them choose for themselves which options they will use and which ones are too OP.
 - Verified on my ship:
