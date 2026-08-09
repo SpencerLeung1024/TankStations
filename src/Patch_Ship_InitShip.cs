@@ -9,6 +9,7 @@ namespace TankStations;
 // reconciliation of the T4 drain ledger when a drained ship loads for real.
 //
 // Spawn approach adapted from Testudo Safe Pump's Patch_Ship_InitShip: Postfix on Ship.InitShip,
+// Permission granted by Valtora, 2026-08-08
 // gated on aRooms.Count > 0 (only Edit+ loads have real items), deterministic FNV-1a rolls keyed
 // on regID so results are savescum-proof and stable across visits, floor scan for placement.
 //
@@ -35,8 +36,15 @@ internal static class Patch_Ship_InitShip
 
     private static readonly HashSet<string> PirateTemplates = new HashSet<string>
     {
-        "SalvagePodSmall", "SalvagePodEndurance", "SalvagePod", "Inspection Pod", "Coffin", "Whistler Hot-Rod", "Argute Rapid Courier", "Primigenial PY"
+        //"SalvagePodSmall", "SalvagePodEndurance", "SalvagePod", "Inspection Pod", "Coffin", "Whistler Hot-Rod", "Argute Rapid Courier", "Primigenial PY"
+        // Those are tiny racing craft used by *OKLG* pirates, not the gunboats used by *COHO* pirates
+        "Vector3 Pirate Refit", "Babak Refit", "Pequod Pirate Refit"
     };
+
+    // TODO: Investigate if there is a way to tell if a ship was spawned by the "RandomNavyShipBeltPirates" rule
+    // Modded Ceres pirate ships won't be picked up by our hardcoded pirate templates
+    // Alternatively just ignore template checks altogether and only check the owner
+    // In the future we may limit T4 to only the big Babak Refit but for now any BeltPirates ship can get a T4
 
     private static void Postfix(Ship __instance)
     {
@@ -68,13 +76,15 @@ internal static class Patch_Ship_InitShip
             {
                 string text = CrewSim.system?.GetShipOwner(strRegID);
                 string text2 = __instance.json?.strName;
+                Plugin.Log.LogDebug($"[TankStations] InitShip: {strRegID} owner={text} template={text2}");
                 if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(text2))
                 {
                     if (text.EndsWith("Hauler") && HaulerTemplates.Contains(text2))
                     {
                         TrySpawn(__instance, strRegID, "|tankstationT3", Plugin.HaulerT3Chance.Value, "ItmTankStationT3Loose", 3);
                     }
-                    else if (text == "COHOPirates" && PirateTemplates.Contains(text2))
+                    //else if (text == "COHOPirates" && PirateTemplates.Contains(text2))
+                    else if (text == "BeltPirates" && PirateTemplates.Contains(text2))
                     {
                         TrySpawn(__instance, strRegID, "|tankstationT4", Plugin.PirateT4Chance.Value, "ItmTankStationT4Loose", 3);
                     }

@@ -727,3 +727,81 @@ GasInput-point semantics, not vessel CTs).
 
 **Now testable (§13):** items 4 (derelict spawn — set DerelictT1Chance=1.0), 6 (T3 docked drain),
 7 (T4 lock+drain+victim keep-alive), 8 (board drained ship: ledger reconcile, save/load).
+
+### Testing (2028-08-08)
+- Oh, uh, maybe I shouldn't have been so wordy. My meaning above is "If I could have more than two power states, I would add turbo and make it use more than 100% base power. In the absence of more than one 'strOverrideCond', I am fine with having no turbo and only a slow mode that does not save power."
+- You went ahead and plugged in turbo (20x flow rate for no additional power draw), which I guess is okay. It's always better to give the player more options (I want to fully drain this tank NOW) and let them choose for themselves which options they will use and which ones are too OP.
+- Verified on my ship:
+- - Tank stations do not accept ItmCanister01 or ItmRTACO2, since the conditions they have do not match any accepted VesselConds. This is fine for the first release. I will see if sorting mixed gases from an orange can is a desired use case.
+- - N2 cans under RCS intakes are filled before other N2 cans
+- - When an accepted can (like N2) has both N2 and O2 through air pump shennanigans, it's as if the tank station sweeps the expected volume from the entire source, keeps only N2, and returns O2 back to the source. N2 goes down proportionally while O2 stays the same. O2 does not get put in ship O2 cans even if there is needed O2.
+- - On a T2 tank station, normal takes 0.256x every 2 second cycle (100.78 L/s). slow takes 0.0255x every cycle (10.05 L/s). Turbo *has no effect*. It seems to still be 0.256x. You cannot select turbo and slow simultaneously. Selecting one will deselect the other. The stock turbo air pump is like this too.
+- Verified from docking at derelicts:
+- - When both T1 spawn chance and T2 spawn chance are 100%, a T2 tank station spawns (loose). The T1 is blocked.
+- - See `C:\Users\spenc\AppData\LocalLow\Blue Bottle Games\Ostranauts` `Player.log` and `Player-prev.log` (this particular interaction may not be in there because the game only keeps the last 2 game sessions)
+- - It does not interfere with Valtorra's water tanks. I saw a water tank along with my tank station on the same derelict.
+- - Undocking and re-docking does not regenerate the tank station. On the other hand, Valtorra's water tank respawned.
+- Verified from mooring at haulers:
+- - The T3 is there (loose).
+- - I noticed you made all the tank stations spawn loose. The water tanks and safe pump are spawned installed.
+- - First thing I did (after uninstalling all their thrusters and saying hi) was install the T3 on the hauler. It immediately started draining my ship to fill their ship (moored ships are considered docked and T3-able even if no physical link exists). See `Ostranauts/MileStone2Images`. Working as intended.
+- - When there's nothing to do, the power draw (as measured from the hauler's battery) goes from 27 kW to 14 kW.
+- - I then uninstalled the T3 and put it on my ship, which did the same thing in reverse.
+- - The reverse toggle works as expected.
+- - Due to the hauler layout, the only valid spawn point for a 3x3 item is in the airlock. I don't think any loot / loose items every spawn there so it should always be available.
+- Now the hard part: Taking down pirates with guns at Ceres and stealing their T4:
+- - There is no T4. I think you have the wrong PirateTemplates in Patch_Ship_Initship.cs. Those are tiny racing craft used by *OKLG* pirates, not the gunboats used by *COHO* pirates.
+- - loot.json line 27650: "RandomPirateShip" "SalvagePodSmall=0.125x1|SalvagePodEndurance=0.125x1|SalvagePod=0.125x1|Inspection Pod=0.125x1|Coffin=0.125x1|Whistler Hot-Rod=0.125x1|Argute Rapid Courier=0.125x1|Primigenial PY=1.0x1"
+- - line 27461: "RandomNavyShipBeltPirates" "Vector3 Pirate Refit=0.45x1|Babak Refit=0.45x1|Pequod Pirate Refit=0.1x1"
+- - Swapping out PirateTemplates still didn't fix it. Even at 100% spawn rate, nothing was in the logs. So I checked text
+- - [Debug  :Tank Stations] [TankStations] InitShip: O-GEZ owner=BeltPirates template=Babak Refit
+- - Swapping "COHOPirates" for "BeltPirates" fixed it. I got my T4
+- - [Debug  :Tank Stations] [TankStations] InitShip: O-GEZ owner=BeltPirates template=Babak Refit
+- - [Info   :Tank Stations] [TankStations] Spawn: placed ItmTankStationT4Loose on O-GEZ.
+- - Yay.
+- - With my new T4 station, I tried to sneak up on another Babak Refit. The 500 km cutoff range of the remote siphoning is smaller than their 600 km sensor range. After buffing my cutoff range I found that I could sit outside their sensor range (much as I can manually snipe at 1000 km using railguns) and drain fuel without them ever being aware of me existing or taking evasive manuvers.
+- - My RCS N2 reserves ticks up by a few kg every few seconds, and presumably their RCS ticks down an equal amount.
+- - I don't even need to press the button to target lock them. Simply having the navigation crosshair on them was enough.
+- - - Target lock is used by *NPC* pirates when trying to chase and board the *Player*. The *Player* gets a target lock alert on their nav. It is used by all ships to fire missiles (otherwise the missiles go off sideways in a straight line). Apparently the NPC Babak Refit takes no evasive manuvers when I target lock them at 700 km.
+- - Then I crashed into an asteroid while I wasn't paying attention to the map and my ship blew up. I got this when quitting to menu or loading a save:
+- - - NullReferenceException: Object reference not set to an instance of an object
+  at StarSystem.Update (System.Double fTimeDelta) [0x0013d] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+  at CrewSim.Update () [0x001f5] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+- - - I've tried setting the T4 on or off, installed or loose or in my drag slot, or trashing it in my inventory. So long as it has existed at least once in the world, even if it no longer exists, the game will not exit properly. Maybe it really does run on witchcraft. Needless to say I can't release the mod in this state.
+- - In fact, I seem to be unable to use the debug menu to instantly return to OKLG.
+- - - Leaving ATC Region: BCER
+NullReferenceException: Object reference not set to an instance of an object
+  at AIShipManager.AIShipCleanup (Ostranauts.Ships.AIPilots.AIShip aiShip, System.Collections.Generic.Dictionary`2[TKey,TValue] dictStns, Ship atcLast) [0x00007] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+  at AIShipManager.RegionCleanup () [0x00124] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+  at AIShipManager.Update () [0x00017] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+  at StarSystem.Update (System.Double fTimeDelta) [0x00399] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+  at CrewSim.Update () [0x001f5] in <f9c3e707ae374f5ab5de549194f2ee62>:0 
+- T4 Testing (by loading a save from before I instantly travelled to Ceres and then spawn ItmTankStationT4Loose):
+- - Waiting for a scavenger with a reactor ship took a very long time. There are reactor ships in loot.json "RandomScavShip" but I guess luck isn't with me today.
+- - I found a Heavy Tug 01 at 23:38, 10 hours after game start, and immediately chased it down.
+- - Template: 2 O2 cans, 2 atmo N2 cans, 6 RCS N2 cans, 1 He3 tank, 1 D2O tank
+- - Expected contents: 855 kg O2, 749 kg atmo N2, 2247 kg RCS N2, 5216 kg He3, 44722 kg D2O
+- - Remote drained (as measured from my tanks): 855 kg O2, 1349 kg N2, 183 kg He3, 41243 kg D2O
+- - Even after changes in my ship's resources stopped, I didn't receive the SOS from the scavenger.
+- - I then saved, alt + f4, and loaded that save
+- - After 3 hours 30 minutes of 16x game time, the ship did not despawn.
+- - I then attempted a force docking to see if that would get the AI to switch to evade mode, then realize it's out of N2, then SOS. It didn't do any of that.
+- - I have no reference to what a normal ship despawning is like and don't know if the ship would have despawned on hour 4. I think this is one of the things that will need testing in real gameplay by different people.
+- - Remaining when docked: 0.01 kg O2, 482 kg atmo N2, 0.02 kg RCS N2, 5026 kg He3, 3420 kg D2O
+- - The remaining amount is close to the 5216 : 3479 He3 : D2O ratio
+- - In fact, while remote draining, for every 1 kg He3 I get like 8.6 kg D2O, which is way too D2O rich
+- - He3 stops increasing early. D2O keeps increasing for longer.
+- - Did you flip the masses attributable to fShallowFusionRemain / unburnable?
+- - The log says:
+- - - [Info   :Tank Stations] [TankStations] Reconciled drain ledger on O-8JGZ: O2 855.83 kg, N2 1355.27 kg, He3 183.15 kg, D2O 41243.73 kg.
+[Debug  :Tank Stations] [TankStations] InitShip: O-8JGZ owner=OKLGScav template=Heavy Tug 01
+- What does "selected on the map" mean?
+- - In-game each nav station keeps track of its separate selection. I spawned a ship for myself that has two nav stations.
+- - There is also the navmap GUI that you can access in your PDA at all times, which can be opened to show a map too.
+- - It seems to be selection of the map *most recently* interacted with. I can change drain or no drain by opening the PDA, or hopping in nav station 1, or hopping in nav station 2, and selecting either the heavy tug or empty space. The behavior of the T4 and whether tanks on my ship fill over time reflects this state, even if I'm not in a map and just walking around.
+- I realized that if you have a T4 running on your ship and you click around various derelicts and ships to take a look, as I often do, *each ship you click on will be drained a bit and will be marked as a drain victim*. This might eventually clog up the ship list. I'll have to see the long-term effects of this.
+- You may also want to take a look at this log when my tanks are *full*.
+- - [Info   :Tank Stations] [TankStation f26834e0-d82f-4988-8592-da9f1a8ad6e7] IDLE: loaded tanks are nearly empty
+- Oh I also changed the T4 falloff from lerp to 1/n (with a hard cutoff). I actually intended for T4 to remote drain 30 L/s at 500 km, 60 L/s at 250 km, and 300 L/s at 50 km. Lerp means that at 250 km (you can still be acquired and get missiles, but are outside coilgun and railgun auto range), you move 150 L/s. Tank Stations should encourage either patient zoning (if you don't want to get hit) or rapidly closing in and going for the mobility and/or kinetic kill (if the target can't fight back or you can tolerate hits on your ship).
+- My original intention was for T4 to siphon out to infinity. It would be basically useless beyond a couple hundred km but it would be funny.
+- Strictly speaking incorporating StatLiqH2O and adding remote drain remaining and rate text to the nav map isn't necessary for a release, but I really want the latter because even with the log file open I have a hard time figuring out what the T4 station is doing.

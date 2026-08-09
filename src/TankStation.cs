@@ -213,7 +213,9 @@ internal static class TankStation
                     {
                         remoteTarget = ship2;
                         remoteInv = ShallowFuel.GetInventory(ship2);
-                        remoteFalloff = ((num <= (double)value) ? 1.0 : Math.Max(0.0, 1.0 - (num - (double)value) / Math.Max(1.0, (double)(value2 - value))));
+                        //remoteFalloff = ((num <= (double)value) ? 1.0 : Math.Max(0.0, 1.0 - (num - (double)value) / Math.Max(1.0, (double)(value2 - value))));
+                        // Change from lerp to 1/n
+                        remoteFalloff = ((num <= (double)value) ? 1.0 : value / num);
                     }
                 }
             }
@@ -393,6 +395,8 @@ internal static class TankStation
         {
             SetPumping(station, false);
             LogStatus(station, "IDLE: loaded tanks are nearly empty", srcs.Count, 0.0);
+            // This path is taken even if the cause of idle is that the ship's tanks are full
+            // Maybe use a different log
         }
     }
 

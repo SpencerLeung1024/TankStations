@@ -8,6 +8,7 @@ namespace TankStations;
 // C# code for inserting tank station tiers 1 and 2 into supply kiosk inventories
 // Compatible with multiple other mods also modifying the same inventories
 // Basically copied from Valtorra's Ship's Water and Testudo Safe Pump mods
+// Permission granted by Valtora, 2026-08-08
 
 internal static class KioskStock
 {
