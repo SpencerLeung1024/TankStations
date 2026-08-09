@@ -76,7 +76,10 @@ internal static class Patch_Ship_InitShip
             {
                 string text = CrewSim.system?.GetShipOwner(strRegID);
                 string text2 = __instance.json?.strName;
-                Plugin.Log.LogDebug($"[TankStations] InitShip: {strRegID} owner={text} template={text2}");
+                if (Plugin.VerboseLogging.Value)
+                {
+                    Plugin.Log.LogDebug($"[TankStations] InitShip: {strRegID} owner={text} template={text2}");
+                }
                 if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(text2))
                 {
                     if (text.EndsWith("Hauler") && HaulerTemplates.Contains(text2))

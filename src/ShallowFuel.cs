@@ -34,7 +34,8 @@ internal static class ShallowFuel
 
     public const int D2O = 3;
 
-    private static readonly string[] Names = { "O2", "N2", "He3", "D2O" };
+    // Resource names in index order (O2, N2, He3, D2O) - also used by the nav label.
+    public static readonly string[] Names = { "O2", "N2", "He3", "D2O" };
 
     // Contents cond per resource on a source tank (mols for gases, kg for liquids).
     private static readonly string[] ContentStat = { "StatGasMolO2", "StatGasMolN2", "StatSolidHe3", "StatLiqD2O" };
@@ -140,12 +141,20 @@ internal static class ShallowFuel
                 {
                     return 0.0;
                 }
-                double num4 = Math.Max(0.0, inv.BakedFusionSec - Math.Max(0.0, target.fShallowFusionRemain));
-                return Math.Max(0.0, inv.Kg[res] - num4 * num3 - num);
+                return Math.Max(0.0, inv.Kg[res] - BurnedSeconds(target, inv) * num3 - num);
             }
             default:
                 return 0.0;
         }
+    }
+
+    // Seconds of torch the target has actually BURNED. baked - live overcounts by the seconds WE
+    // debited via draining (StatTankDrainTorch ledger) - without that correction, draining the
+    // unburnable D2O excess would read as "all He3 burned" and He3 would wrongly show empty.
+    private static double BurnedSeconds(Ship target, TemplateInv inv)
+    {
+        double num = target.ShipCO?.GetCondAmount("StatTankDrainTorch") ?? 0.0;
+        return Math.Max(0.0, inv.BakedFusionSec - Math.Max(0.0, target.fShallowFusionRemain) - num);
     }
 
     // Remove up to kgWant kg of `res` from the shallow target: updates the live shallow fields,
@@ -161,38 +170,26 @@ internal static class ShallowFuel
         {
             return 0.0;
         }
-        switch (res)
+        if (res == N2)
         {
-            case N2:
-                target.fShallowRCSRemass = Math.Max(0.0, target.fShallowRCSRemass - num);
-                break;
-            case He3:
-            case D2O:
-            {
-                double num2 = ((res == He3) ? inv.He3Rate : inv.D2ORate);
-                if (num2 > 0.0)
-                {
-                    target.fShallowFusionRemain = Math.Max(0.0, target.fShallowFusionRemain - num / num2);
-                }
-                break;
-            }
+            target.fShallowRCSRemass = Math.Max(0.0, target.fShallowRCSRemass - num);
         }
         target.ShipCO.AddCondAmount("StatTankDrain" + Names[res], num);
-        target.ShipCO.SetCondAmount(VictimCond, 1.0);
         if (res == He3 || res == D2O)
         {
-            ClampFusionConsistency(target, inv);
+            RecomputeFusionSeconds(target, inv);
         }
         return num;
     }
 
-    // After editing fusion seconds, keep them consistent with the remaining kg of BOTH reactants
-    // (draining either one must be able to zero the torch; the other must never imply more burn
-    // time than its own remaining mass allows).
-    private static void ClampFusionConsistency(Ship target, TemplateInv inv)
+    // After a fusion-reactant drain, recompute the torch seconds the remaining mass can actually
+    // sustain (limiting reactant wins), and record the seconds we debited in StatTankDrainTorch
+    // so BurnedSeconds keeps burn and drain apart. Draining the NON-limiting resource (e.g. the
+    // D2O reserve a ship carries far beyond its He3 supply) leaves the torch nearly untouched.
+    private static void RecomputeFusionSeconds(Ship target, TemplateInv inv)
     {
         double num = Math.Max(0.0, target.fShallowFusionRemain);
-        double num2 = double.PositiveInfinity;
+        double num2 = num;
         if (inv.He3Rate > 0.0)
         {
             num2 = Math.Min(num2, AvailableKg(target, inv, He3) / inv.He3Rate);
@@ -201,11 +198,38 @@ internal static class ShallowFuel
         {
             num2 = Math.Min(num2, AvailableKg(target, inv, D2O) / inv.D2ORate);
         }
-        if (!double.IsPositiveInfinity(num2))
+        num2 = Math.Max(0.0, num2);
+        if (num2 < num)
         {
-            num = Math.Min(num, Math.Max(0.0, num2));
+            target.ShipCO?.AddCondAmount("StatTankDrainTorch", num - num2);
+            target.fShallowFusionRemain = num2;
         }
-        target.fShallowFusionRemain = num;
+    }
+
+    // Mark the target as a drain victim (despawn protection) - but only once it's meaningfully
+    // crippled, so that idly clicking ships on the nav map (each click sips a little) doesn't
+    // clog the ship list with kept-alive husks. The kg ledger is always written regardless.
+    public static void MaybeMarkVictim(Ship target, TemplateInv inv)
+    {
+        if (target?.ShipCO == null || inv == null || target.ShipCO.HasCond(VictimCond))
+        {
+            return;
+        }
+        bool flag = target.fShallowRCSRemass <= KgFloor && target.GetRCSMax() > 0.0;
+        bool flag2 = inv.BakedFusionSec > 0.0 && target.fShallowFusionRemain <= 0.0;
+        bool flag3 = false;
+        for (int i = 0; i < Names.Length; i++)
+        {
+            if (inv.Kg[i] > 0.0 && GetLedgerKg(target.ShipCO, i) >= 0.9 * inv.Kg[i])
+            {
+                flag3 = true;
+                break;
+            }
+        }
+        if (flag || flag2 || flag3)
+        {
+            target.ShipCO.SetCondAmount(VictimCond, 1.0);
+        }
     }
 
     // Virtual source volume (m^3) for remote gas drains, so flow decays as the target empties
@@ -460,6 +484,7 @@ internal static class ShallowFuel
                 shipCO.ZeroCondAmount("StatTankDrain" + Names[i]);
             }
             shipCO.ZeroCondAmount("StatTankDrainH2O");
+            shipCO.ZeroCondAmount("StatTankDrainTorch");
             Invalidate(text);
             Plugin.Log.LogInfo($"[TankStations] Reconciled drain ledger on {text}: O2 {num:0.##} kg, N2 {num2:0.##} kg, He3 {num3:0.##} kg, D2O {num4:0.##} kg.");
         }

@@ -46,6 +46,8 @@ public class Plugin : BaseUnityPlugin
 
     public static ConfigEntry<bool> KeepDrainVictims;
 
+    public static ConfigEntry<bool> NavLabelEnabled;
+
     public static ConfigEntry<bool> VerboseLogging;
 
     private float _timer;
@@ -66,6 +68,7 @@ public class Plugin : BaseUnityPlugin
         T4FullRangeKm = Config.Bind("Balance", "Full Flow Range Km", 50f, new ConfigDescription("Mk IV remote drain runs at full flow out to this range.", new AcceptableValueRange<float>(1f, 1e6f)));
         T4MaxRangeKm = Config.Bind("Balance", "Max Range Km", 500f, new ConfigDescription("Mk IV remote drain stops entirely beyond this range.", new AcceptableValueRange<float>(1f, 1e6f)));
         KeepDrainVictims = Config.Bind("Balance", "Keep Drain Victims", true, "Ships drained by a Mk IV are kept alive (blocked from AI fuel-despawn cleanup) so you can board them. Disable to let them despawn normally.");
+        NavLabelEnabled = Config.Bind("UI", "Nav Siphon Label", true, "Show a readout beside the crosshair target on the nav map when a powered Mk IV could siphon it (remaining kg and current drain rate).");
         VerboseLogging = Config.Bind("Debug", "Verbose Logging", true, "Log per-station status changes to the BepInEx log. Safe to turn off once everything is confirmed working.");
         Harmony.CreateAndPatchAll(typeof(Plugin).Assembly, PluginGuid);
         KioskStock.Install();

@@ -17,7 +17,8 @@ internal static class Patch_UnregisterShip
     {
         try
         {
-            if (Plugin.KeepDrainVictims.Value && aiShip?.Ship != null && aiShip.Ship.ShipCO != null && aiShip.Ship.ShipCO.HasCond(ShallowFuel.VictimCond))
+            Ship ship = aiShip?.Ship;
+            if (Plugin.KeepDrainVictims.Value && ship != null && !ship.bDestroyed && ship.ShipCO != null && ship.ShipCO.HasCond(ShallowFuel.VictimCond) && !ShipIsBeingTornDown(ship))
             {
                 return false; // skip: keep the drained ship registered and inert
             }
@@ -28,6 +29,20 @@ internal static class Patch_UnregisterShip
         }
         return true;
     }
+
+    // Ship.Destroy() removes the ship from StarSystem.dictShips and only THEN calls
+    // UnregisterShip, with bDestroyed still false. If we blocked that unregister, the dead ship
+    // stayed in dictAIs; its AIShip.Ship getter later turns the reference into a REAL null
+    // (GetShipByRegID miss) and the next GetAIShipByRegID caller NREs - which is what broke
+    // quit-to-menu / save loading. So: never block a ship the system no longer tracks.
+    private static bool ShipIsBeingTornDown(Ship ship)
+    {
+        if (CrewSim.system == null)
+        {
+            return true; // scene teardown
+        }
+        return CrewSim.system.GetShipByRegID(ship.strRegID) == null;
+    }
 }
 
 [HarmonyPatch(typeof(FlyTo), "TryInstantCleanup")]
@@ -37,7 +52,8 @@ internal static class Patch_TryInstantCleanup
     {
         try
         {
-            if (Plugin.KeepDrainVictims.Value && __instance?.ShipUs != null && __instance.ShipUs.ShipCO != null && __instance.ShipUs.ShipCO.HasCond(ShallowFuel.VictimCond))
+            Ship shipUs = __instance?.ShipUs;
+            if (Plugin.KeepDrainVictims.Value && shipUs != null && !shipUs.bDestroyed && shipUs.ShipCO != null && shipUs.ShipCO.HasCond(ShallowFuel.VictimCond))
             {
                 return false; // skip: don't backdate IsStale on a drain victim
             }

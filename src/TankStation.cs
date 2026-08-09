@@ -82,6 +82,12 @@ internal static class TankStation
 
     private static double _fLast = -1.0;
 
+    // Last-tick remote drain record (ShallowFuel resource indices), read by NavLabel for the
+    // on-map siphon readout. Cleared at the top of every Run.
+    public static readonly double[] RemoteKgPerSec = new double[4];
+
+    public static string RemoteTargetRegID { get; private set; }
+
     private static readonly Dictionary<string, string> _lastStatus = new Dictionary<string, string>();
 
     private static readonly CondTrigger[] _ctDsts = new CondTrigger[Res.Length];
@@ -102,6 +108,8 @@ internal static class TankStation
         {
             return;
         } // The mod properly defined the condtrig for an installed tank station
+        Array.Clear(RemoteKgPerSec, 0, RemoteKgPerSec.Length);
+        RemoteTargetRegID = null;
         List<CondOwner> iCOs = ship.GetICOs1(condTrigger, bSubObjects: false, bAllowDocked: false, bAllowLocked: true);
         if (iCOs == null || iCOs.Count == 0)
         {
@@ -310,7 +318,17 @@ internal static class TankStation
         if (numActive == 0)
         {
             SetPumping(station, false);
-            LogStatus(station, (srcs.Count == 0) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : "IDLE: nothing to do (ship's tanks are full, or loaded tanks are empty)", srcs.Count, 0.0);
+            bool flag2 = false;
+            for (int n = 0; n < Res.Length; n++)
+            {
+                if (need[n] > Epsilon)
+                {
+                    flag2 = true;
+                    break;
+                }
+            }
+            string text = ((srcs.Count == 0 && remoteTarget == null) ? "IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)" : ((!flag2) ? "IDLE: ship's tanks are full - nothing to take" : "IDLE: sources are empty (loaded/docked/target tanks are drained)"));
+            LogStatus(station, text, srcs.Count, 0.0);
             return;
         }
 
@@ -353,6 +371,7 @@ internal static class TankStation
         if (remoteTarget != null && num2 > 0)
         {
             double num4 = litersEach * remoteFalloff;
+            bool flag = false;
             for (int l = 0; l < Res.Length; l++)
             {
                 if (array[l] && !(need[l] <= Epsilon))
@@ -361,7 +380,17 @@ internal static class TankStation
                     double added2 = ((Res[l].Species != null) ? DrainRemoteGas(remoteTarget, remoteInv, num5, Res[l], num4, need[l], dsts[l]) : DrainRemoteLiquid(remoteTarget, remoteInv, num5, Res[l], num4, need[l], dsts[l]));
                     moved[l] += added2;
                     need[l] -= added2;
+                    if (added2 > Epsilon)
+                    {
+                        flag = true;
+                        RemoteTargetRegID = remoteTarget.strRegID;
+                        RemoteKgPerSec[num5] += ((Res[l].Species != null) ? (added2 * ShallowFuel.MolarMassOf(num5)) : added2) / (double)dtGame;
+                    }
                 }
+            }
+            if (flag)
+            {
+                ShallowFuel.MaybeMarkVictim(remoteTarget, remoteInv);
             }
         }
 
@@ -394,9 +423,7 @@ internal static class TankStation
         else
         {
             SetPumping(station, false);
-            LogStatus(station, "IDLE: loaded tanks are nearly empty", srcs.Count, 0.0);
-            // This path is taken even if the cause of idle is that the ship's tanks are full
-            // Maybe use a different log
+            LogStatus(station, "IDLE: nothing moved (sources nearly empty, or destinations nearly full)", srcs.Count, 0.0);
         }
     }
 

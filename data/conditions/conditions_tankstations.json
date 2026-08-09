@@ -3,5 +3,6 @@
   { "strName": "StatTankDrainN2", "strNameFriendly": "Tank Drain N2", "strColor": "Neutral", "strDesc": "kg of N2 remotely drained from [us] by a tank station.", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 },
   { "strName": "StatTankDrainHe3", "strNameFriendly": "Tank Drain He3", "strColor": "Neutral", "strDesc": "kg of He3 remotely drained from [us] by a tank station.", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 },
   { "strName": "StatTankDrainD2O", "strNameFriendly": "Tank Drain D2O", "strColor": "Neutral", "strDesc": "kg of D2O remotely drained from [us] by a tank station.", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 },
-  { "strName": "StatTankDrainH2O", "strNameFriendly": "Tank Drain H2O", "strColor": "Neutral", "strDesc": "kg of H2O remotely drained from [us] by a tank station.", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 }
+  { "strName": "StatTankDrainH2O", "strNameFriendly": "Tank Drain H2O", "strColor": "Neutral", "strDesc": "kg of H2O remotely drained from [us] by a tank station.", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 },
+  { "strName": "StatTankDrainTorch", "strNameFriendly": "Tank Drain Torch", "strColor": "Neutral", "strDesc": "seconds of torch burn debited from [us] by tank station draining (separates drained fuel from burned fuel).", "bPersists": true, "nDisplaySelf": 0, "nDisplayOther": 0 }
 ]

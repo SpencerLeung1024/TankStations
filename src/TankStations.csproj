@@ -9,7 +9,9 @@
     <Reference Include="Assembly-CSharp"><HintPath>../../../../Ostranauts_Data/Managed/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>../../../../Ostranauts_Data/Managed/UnityEngine.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>../../../../Ostranauts_Data/Managed/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
-    <!-- only if/when needed: UnityEngine.UI, Unity.TextMeshPro, Vectrosity (same folder) -->
+    <Reference Include="Unity.TextMeshPro"><HintPath>../../../../Ostranauts_Data/Managed/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>../../../../Ostranauts_Data/Managed/UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>../../../../Ostranauts_Data/Managed/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>../../../../BepInEx/core/0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="BepInEx"><HintPath>../../../../BepInEx/core/BepInEx.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>

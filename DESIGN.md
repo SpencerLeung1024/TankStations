@@ -805,3 +805,65 @@ NullReferenceException: Object reference not set to an instance of an object
 - Oh I also changed the T4 falloff from lerp to 1/n (with a hard cutoff). I actually intended for T4 to remote drain 30 L/s at 500 km, 60 L/s at 250 km, and 300 L/s at 50 km. Lerp means that at 250 km (you can still be acquired and get missiles, but are outside coilgun and railgun auto range), you move 150 L/s. Tank Stations should encourage either patient zoning (if you don't want to get hit) or rapidly closing in and going for the mobility and/or kinetic kill (if the target can't fight back or you can tolerate hits on your ship).
 - My original intention was for T4 to siphon out to infinity. It would be basically useless beyond a couple hundred km but it would be funny.
 - Strictly speaking incorporating StatLiqH2O and adding remote drain remaining and rate text to the nav map isn't necessary for a release, but I really want the latter because even with the log file open I have a hard time figuring out what the T4 station is doing.
+
+### Session 4 (2026-08-09) — crash fix, fusion model fix, turbo fix, nav label
+
+Response to the 2026-08-08 test notes (commit 359b957 kept: BeltPirates owner + gunboat
+templates + 1/n falloff are the user's edits, retained):
+
+1. **Exit/load NRE (release blocker) — root-caused and fixed.** Vanilla `Ship.Destroy()` order:
+   `CrewSim.system.RemoveShip(this)` THEN `AIShipManager.UnregisterShip(this)`, with
+   `bDestroyed = true` only AFTER. Our UnregisterShip prefix blocked that call for victims → dead
+   ship stayed in `dictAIs`; the `AIShip.Ship` getter (`if (_shipUs.bDestroyed) _shipUs =
+   GetShipByRegID(...)`) then turns the reference into a REAL null once the ship is gone from
+   dictShips → next `GetAIShipByRegID` NREs mid-teardown (`StarSystem.Destroy` → `Ship.Destroy` →
+   `UnregisterShip` → `GetAIShipByRegID` lambda NRE, seen in Player-prev.log:14993), aborting
+   teardown and leaving `StarSystem.Update` NREing every frame. Fix: prefixes never block when
+   `ship.bDestroyed` OR the ship is no longer in `CrewSim.system.dictShips` (= being torn down)
+   OR `CrewSim.system == null` (scene teardown). Note region changes still recycle victims
+   (AIShipCleanup destroys AI ships directly on "Leaving ATC Region") — that's vanilla region
+   recycling, unaffected and correct.
+
+2. **Fusion drain model ("did you flip the masses?") — fixed.** Old model debited
+   `fShallowFusionRemain` by kg/rate for BOTH reactants: draining the unburnable D2O reserve
+   (Heavy Tug carries 44722 kg D2O vs 5216 kg He3; burn needs only 3479 kg D2O for that He3)
+   zeroed the torch seconds, which the availability formula then read as "all He3 burned" → He3
+   stopped at 183 kg while D2O kept going (exactly the user's numbers). New model: ledger cond
+   `StatTankDrainTorch` (bPersists, seconds) records the torch time WE debited;
+   `burnedSec = max(0, baked − live − drainedTorch)`; availability `kgNow = templateKg −
+   burnedSec×rate − ledger`. After each fusion-reactant drain, `fShallowFusionRemain` is
+   RECOMPUTED as `min(live, kgNowHe3/rHe3, kgNowD2O/rD2O)` and the debit accumulated into the
+   torch ledger. Draining excess D2O now leaves the torch almost untouched; draining the limiting
+   He3 kills it proportionally. Reconcile zeroes the torch ledger with the rest. Expected retest
+   on the same Heavy Tug: full ~5,033 kg He3 drainable and ~41 t D2O, torch dies exactly when the
+   limiting reactant empties. (The 8.6:1 D2O:He3 drain ratio the user saw is just the density
+   ratio of the swept-volume rate model — both canisters are 40.4 m³ — not the bug.)
+
+3. **Turbo fixed.** Vanilla format is `IsTurbo=1.0x20.0` (CNDOLAirPump01, loot.json:3148);
+   GetCondAmount returns the part after "x". Ours was `20.0x1` → multiplier 1.0. Fixed on all 4
+   installed COs. Turbo/slow mutual exclusion observed in-game is stock GUI behavior.
+
+4. **Victim marking threshold (anti-clog).** IsTankDrainVictim is now applied only when the
+   target is meaningfully crippled: RCS dry (fShallowRCSRemass ≤ floor with GetRCSMax > 0), OR
+   torch dead (baked > 0 and fShallowFusionRemain ≤ 0), OR any single resource's ledger ≥ 90% of
+   its template total. Clicking around the map sips a few kg without condemning ships to eternal
+   inertness; the kg ledger is always written and reconciles on boarding regardless.
+
+5. **Nav label (§11, "I really want this") — implemented.** `NavLabel.cs`: postfix on
+   `GUIOrbitDraw.DrawSystem`, label instantiated from `GUIShip/lblOrbit` under the orbit panel
+   (OrbitMarkers pattern), shown when the player's ship has an installed+powered Mk IV and the
+   crosshair target is a ship. Shows range/flow%, per-resource remaining kg and live kg/s rate
+   (TankStation records last-tick remote rates into `RemoteKgPerSec[]`/`RemoteTargetRegID`),
+   "OUT OF RANGE", "TARGET DRY", and a loaded-target note. Toggle: config "Nav Siphon Label"
+   (default on). New csproj refs: Unity.TextMeshPro, UnityEngine.UIModule, UnityEngine.UI.
+
+6. **Cosmetics.** Idle log now distinguishes "ship's tanks are full" vs "sources are empty" vs
+   "no tanks loaded"; the user's InitShip owner/template debug line is gated behind Verbose
+   Logging.
+
+**Retest list:** (a) exit-crash repro: create a victim, then quit to menu / load save / debug
+jump regions — should be clean now; (b) Heavy Tug He3 full drain + torch behavior; (c) turbo
+switch actually multiplies flow 20x (and slow still 0.1x, slow wins); (d) click-sipping a ship
+briefly then leaving it alone → it should despawn normally later (no victim marker until
+crippled); (e) nav label appears on crosshair targets with a powered T4, updates rates while
+draining; (f) reconcile on boarding unchanged.
