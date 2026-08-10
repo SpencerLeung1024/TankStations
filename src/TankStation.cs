@@ -53,6 +53,7 @@ internal static class TankStation
     // One row per transferable resource. Adding a resource (e.g. Ship's Water StatLiqH2O, or
     // anything the devs add later) means appending one row here instead of another copy of the
     // four-parallel-variables pattern.
+    // Note that the order and membership is different from loot.json "GasPrices"
     private class ResSpec
     {
         public string Name; // short label for logs: "O2"
@@ -82,6 +83,9 @@ internal static class TankStation
 
     private static double _fLast = -1.0;
 
+    // This is a static, calculated by TankStation.Run, and sums effective L/s for all T4 tank stations
+    // I hate this
+    public static double EffectiveLPerSec { get; private set; }
     // Last-tick remote drain record (ShallowFuel resource indices), read by NavLabel for the
     // on-map siphon readout. Cleared at the top of every Run.
     public static readonly double[] RemoteKgPerSec = new double[4];
@@ -108,6 +112,7 @@ internal static class TankStation
         {
             return;
         } // The mod properly defined the condtrig for an installed tank station
+        EffectiveLPerSec = 0.0;
         Array.Clear(RemoteKgPerSec, 0, RemoteKgPerSec.Length);
         RemoteTargetRegID = null;
         List<CondOwner> iCOs = ship.GetICOs1(condTrigger, bSubObjects: false, bAllowDocked: false, bAllowLocked: true);
@@ -306,6 +311,11 @@ internal static class TankStation
         {
             for (int j = 0; j < Res.Length; j++)
             {
+                // 2026-08-09: Disable O2 remote drain
+                if (j == 0)
+                {
+                    continue;
+                }
                 int num3 = ShallowFuel.IdxOf(Res[j].Name);
                 if (num3 >= 0 && need[j] > Epsilon && ShallowFuel.AvailableKg(remoteTarget, remoteInv, num3) > KgFloor)
                 {
@@ -371,9 +381,15 @@ internal static class TankStation
         if (remoteTarget != null && num2 > 0)
         {
             double num4 = litersEach * remoteFalloff;
+            EffectiveLPerSec += (double)FlowForTier(tier) * flowMult * remoteFalloff;
             bool flag = false;
             for (int l = 0; l < Res.Length; l++)
             {
+                // 2026-08-09: Disable O2 remote drain. O2 isn't used by NPC ships in either their RCS or torch drive to escape, so focus flow rate on resources that will achieve a mobility kill
+                if (l == 0)
+                {
+                    continue;
+                }
                 if (array[l] && !(need[l] <= Epsilon))
                 {
                     int num5 = ShallowFuel.IdxOf(Res[l].Name);

@@ -867,3 +867,86 @@ switch actually multiplies flow 20x (and slow still 0.1x, slow wins); (d) click-
 briefly then leaving it alone → it should despawn normally later (no victim marker until
 crippled); (e) nav label appears on crosshair targets with a powered T4, updates rates while
 draining; (f) reconcile on boarding unchanged.
+
+### Session 4 Testing (2026-08-09)
+- Holy shit the singularity might be upon us. You figured out what caused the null reference exception from nothing more than offsets of core game functions. If I had to debug that myself I genuinely would have mothballed this mod.
+- I loaded the save with the heavy tug.
+- - I can see your orange label on the nav map.
+SIPHON 10.5 km - full flow
+O2 775.4 kg -40.8 kg/s
+N2 1,323 kg -16.1 kg/s
+He3 5,197 kg -9.68 kg/s
+D2O 44,559 kg -83 kg/s
+- - My interpretation: there are two O2 cans at 100% pressure, there is a single (shallow) N2 can at 80% pressure, there is 1 He3 tank, there is 1 D2O tank
+- - You said the tank station logic does an equal volume sweep of the shallow ship's He3 and D2O. Both are equal volume (40400 L) and D2O is 8.6 times denser, so you end up siphoning 1 : 8.6 He3 : D2O mass ratio. Technically the fastest mobility kill is to siphon one of the resources only, but I prefer the equal volume sweep. It's more robust to future game updates or mods introducing new reactor types that have different reactants and limiting reactants. Just drain everything equally.
+- - The log is as expected. O2 and N2 slow down while He3 and D2O remain constant.
+[Info   :Tank Stations] [TankStation bc414805-08cd-48d8-8669-07300f7d1898] PUMPING O2 +2515.242 mol N2 +1137.435 mol He3 +19.108 kg D2O +163.834 kg remote:O-8JGZ
+[Info   :Tank Stations] [TankStation bc414805-08cd-48d8-8669-07300f7d1898] PUMPING O2 +2346.903 mol N2 +1143.936 mol He3 +19.68 kg D2O +168.738 kg remote:O-8JGZ
+[Info   :Tank Stations] [TankStation bc414805-08cd-48d8-8669-07300f7d1898] PUMPING O2 +2085.329 mol N2 +1098.193 mol He3 +19.362 kg D2O +166.01 kg remote:O-8JGZ
+- - This time I immediately forced dock but the heavy tug continued its course. It still had N2 at this point.
+- - I'm honestly not sure what triggers a NPC to begin evasive manuvers, or if I was hallucinating the whole time and NPCs do not try to evade when you Initiate Forced Docking Procedure. Non-combatants (miners or cargo) at Ceres belonging to CCRE or GalileanConfederacy will book it if you are a known enemy and approach them. This time I got Fctn:s in the Event Log at the bottom of the screen, which I thought indicated an unfriendly encounter.
+- - - Comms Controls:
+> <Configuring Docking Procedure>
+<Handshake received> <
+> Original Renegade, ready to proceed
+O-UZW2, please choose a docking port. <
+> Original Renegade this is Eldritch Funk requesting clearance for close approach and docking.
+Negative Eldritch Funk. You are not cleared for close approach. Change your vector. <
+> Be advised Original Renegade we are initiating maneuvers for a forced dock.
+Captain Hailey Cervantes change your vector, you are unauthorized. I repeat you are not cleared for close approach or dock. <
+- - - Event Log:
+Fctn:XinhuaCiv 0.00 Fctn:Goodluck Gillespie -0.27 Fctn:XinhuaCiv -0.14 Fctn:Goodluck Gillespie -10.00
+- - Back at Nav Controls: SIPHON: target is loaded (boarding range state) - contact drain via real tanks
+- - Player.log:
+[Info   :Tank Stations] [TankStations] Reconciled drain ledger on O-8JGZ: O2 855.75 kg, N2 1336.6 kg, He3 3440.04 kg, D2O 29495.22 kg.
+[Debug  :Tank Stations] [TankStations] InitShip: O-8JGZ owner=OKLGScav template=Heavy Tug 01
+- - There's 1770 kg He3 and 15179 kg D2O (about one third of each) remaining on the heavy tug. My ship has 3445 kg He3 and 29543 kg D2O. The equal-volume siphon is working.
+- - I noticed something while walking between my ship and their ship. Tank stations only run while I am standing on my ship. The game has some really weird code where the active ship is the one you're standing on, and changes as you walk around. For example, if you're standing on a derelict and a micrometeoroid is scheduled to strike, it will always strike the derelict and not your own ship docked. I assume TankStation.cs is hardcoded to only check tank stations on "your ship", for some definition of "your ship", and since there are no tank stations on the OKLGScav ship nothing is pumped.
+- - I then saved and quit to menu. No errors this time. Yay.
+- Hopping back in and debug travelling to BCER.
+- - No errors.
+- - I approached a RandomCivilianShipCCRE Edelweiss and did the "I am not a pirate" thing.
+- - - Comms Controls:
+> <Configuring Docking Procedure>
+<Handshake received> <
+> Cerebral Bore, ready to proceed
+O-UZW2, please choose a docking port. <
+> Cerebral Bore this is Eldritch Funk requesting clearance for close approach and docking.
+Negative Eldritch Funk. You are not cleared for close approach. Change your vector. <
+> Be advised Cerebral Bore we are initiating maneuvers for a forced dock.
+Captain Hailey Cervantes change your vector, you are unauthorized. I repeat you are not cleared for close approach or dock. <
+- - - Event Log:
+Fctn:Cai Weber -0.23 Fctn:CCRE 0.00 Fctn:CCRECiv 0.00 Fctn:Cai Weber -10.00 Fctn:CCRE -0.10 Fctn:CCRECiv -0.10
+- - The NPC ship stayed put.
+- - I shot at it, which caused it to run away, and then crash into an asteroid and despawn. I guess I'll have to try a target outside the asteroid field.
+- - I approached a RandomCivilianShipGalileanConfederacy Tombolo 2 that was returning to BCER. It was at like 11 km/s but decelerating at 2 Gs
+- - It did not respond to forced docking or being shot at. It just carried on its course decelerating.
+- - While it was decelerating using the torch, its He3 and D2O labels were not going down.
+- - Once within 500 km, I used the T4 to drain its N2, He3, and D2O. But even after all three were dry it kept decelerating.
+- - I know that when the player has a course plotted on their long range course plot, the ship is considered on rails. Check if NPCs on torch trajectories also have autopilot and see if there's a way to disengage it.
+- - I could have used > 2 Gs acceleration to close the distance and board it at any time, but this is very much not the expected result of draining a ship of all fuel.
+- Siphoning behavior:
+- - You can select OKLG:
+SIPHON 55.6 km - flow 89%
+O2 855.8 kg
+But stations are protected from tank draining of any kind. Maybe edit the text to show that stations cannot be siphoned?
+- - You can select a derelict:
+SIPHON 57.9 km - flow 86%
+O2 1,513 kg -32.1 kg/s
+N2 2,887 kg -18.3 kg/s
+He3 20,816 kg -8.25 kg/s
+D2O 44,303 kg -70.8 kg/s
+This is a MesaCargo which I know has 4 He3 tanks. But we treat the shallow ship as having a single He3 "tank" that holds 4x5216 kg.
+This is a problem for bean counters, although it might not be a problem for players. Shallow ships (OKLG derelicts, ships at Ceres you're shooting at, etc.) aren't realized yet. The derelict damage pass or actual ship combat damage might destroy tanks, so you would have been siphoning from tanks that vanish when realized.
+Ultimately there is no way to know "does the tank actually exist?" without realizing the ship, and we can't do that because the game would become unplayable. I've thought about this and there is no good solution that both allows siphoning from a shallow ship while satifying bean counters. I think the mod should 1. have a checkbox for "allow siphoning from unvisited derelicts" with a note that the random 0 - 100% fill is not applied and you may successfully siphon more fuel than you could have in the stock game, and 2. simply tell the player in the steam description that combat damage that destroys a fuel tank is not included in fuel capacity calculations. We already have a magical device that drains fuel across open space so might as well permit ridiculous levels of OP.
+This discrepancy can be seen in fShallowFusionRemain too. If you shoot out part of a ship that you know has fusion fuel, the ship will keep thrusting.
+- After that, I reverted to session 3 and turned off Patch_UnregisterShip.cs to see if that was the causative agent. Then I siphoned the heavy tug again.
+- - 
+- Your ResSpec for each resource is really convenient... but everything surrounding it is not. Originally I was going to add support for StatGasMolCO2, StatLiqH2O, and StatLiqH2OWaste. But 1. I don't know best practices for handling presence / absence of the Ship's Water mod, 2. disabling O2 remote drain showed the current setup is extremely brittle, and 3. implementing these resources has far lower utility. CO2 and waste water never spawns on other ships. Water spawns uncommonly, is consumed in small amounts, and would be far cheaper in opportunity cost even with Tank Stations to just buy from the refuel kiosk than to go hunting for it and moving cans around. 
+- I know you already figured out the ledger for draining O2 from a shallow ship, but having 4 remotely drainable resources clutters the nav map a bit and draining O2 isn't strictly needed for piracy. Keep the flow rate prioritized on what will achieve a mobility kill. I've disabled the paths for remotely draining O2 through the laziest method possible: if i == 0 continue. It exists if there is demand to re-enable it.
+- I hate how there's two separate lists of resources, one in TankStation.cs and one in ShallowFuel.cs.
+- I also moved the orange label from above the target to to the right of the target. Personal preference.
+- There seems to be interference with the Orbit Markers mod. The CPA label is no longer at the green closest point. It's always pinned to wherever this mod's orange label is. I don't know how this game's UI library works so can you check if anything needs to be unlinked or deep copied?
+- The tank station does not touch orange cans, or the wrong kind of gas (O2 that got pumped into an N2 can, etc.). I am fine with this. There is another mod that adds a manifold where you can put any gas can at the input side and it will partition O2, N2 and CO2 into each of its outputs.
+- I just need to get permission from EddieSM for the pattern to extend the nav map, and then this is ready for release. I'm still not 100% confident no more NREs or various bugs will happen but I will preface the mod as experimental and needing help with testing in real gameplay.
+- Can you give me a section that describes how to get a tank station and the usage pattern, as well as a section with a list of gotchas or weird behavior? Things that you and I found out, but would be unintuitive to someone who downloaded the mod?

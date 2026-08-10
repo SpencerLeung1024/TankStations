@@ -26,6 +26,9 @@ internal static class ShallowFuel
     public const string VictimCond = "IsTankDrainVictim";
 
     // Resource indices used everywhere in this file.
+    // Currently identical order and membership to TankStation.cs ResSpec[] Res
+    // 2026-08-09: Removed O2 remote drain through TankStation.cs but kept it as index 0 here because a lot of this is hardcoded
+    // Having two separate lists is probably going to blow up at some point
     public const int O2 = 0;
 
     public const int N2 = 1;

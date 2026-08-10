@@ -3,7 +3,7 @@
     "strName": "ItmTankStationT1",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX1\" Tank Station Mk I",
-    "strDesc": "Originally a project to combine an N2 canister and an RCS intake in-house to avoid subcontracting Kang, legal battles forced the GX1 to be redesigned into a compact transfer pump that empties salvaged gas cans into the ship's own tanks. Open its hopper and drop in a single O2 or N2 canister, wire the unit to ship power, and set the panel to AUTO or ON: the can's contents are pumped into your installed tanks and any cans feeding your RCS intakes, stopping just short of maximum safe pressure. With DUMP MODE on (right-click the unit), a loaded can keeps draining even when your tanks are full, venting the excess.",
+    "strDesc": "Originally a project to combine an N2 canister and an RCS intake in-house to avoid subcontracting Kang, legal battles forced the GX1 to be redesigned into a compact transfer pump that empties salvaged gas canisters into the ship's own tanks. Open its hopper and insert a can, wire the unit to ship power, and set the panel to AUTO or ON: the can's contents are pumped into your installed tanks and any cans feeding your RCS intakes, stopping just short of maximum safe pressure. With DUMP MODE on (right-click the unit), a loaded can keeps draining even when your tanks are full, venting the excess.",
     "strItemDef": "ItmTankStationT1",
     "strType": "Item",
     "aInteractions": [
@@ -183,7 +183,7 @@
     "strName": "ItmTankStationT2",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9\" Tank Station Mk II",
-    "strDesc": "After the runaway success of the GX1, Ryokka introduced a full-size transfer station that empties salvaged tanks into the ship's own stores. Its bay takes up to nine O2/N2 canisters, or a single large He3 or D2O canister - the only practical way to move fusion fuel between tanks. Wire the unit to ship power and set the panel to AUTO or ON; it pumps until your installed tanks and RCS-intake cans are just short of maximum safe pressure. With DUMP MODE on (right-click the unit), loaded tanks keep draining even when your stores are full, venting the excess.",
+    "strDesc": "After the runaway success of the GX1, Ryokka introduced a full-size transfer station that quickly empties salvaged tanks into the ship's own stores. Its bay takes up to nine gas canisters, or a single large He3 or D2O tank, allowing you to transfer fusion fuels. Wire the unit to ship power and set the panel to AUTO or ON; it pumps until your installed tanks and RCS-intake cans are just short of maximum safe pressure. With DUMP MODE on (right-click the unit), loaded tanks keep draining even when your stores are full, venting the excess.",
     "strItemDef": "ItmTankStationT2",
     "strType": "Item",
     "aInteractions": [
@@ -244,7 +244,7 @@
     "strName": "ItmTankStationT2Loose",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9\" Tank Station Mk II (Loose)",
-    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
+    "strDesc": "A full-size transfer station that quickly empties salvaged tanks into the ship's own stores, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
     "strItemDef": "ItmTankStationT2Loose",
     "strType": "Item",
     "aInteractions": [
@@ -284,7 +284,7 @@
     "strName": "ItmTankStationT2Dmg",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9\" Tank Station Mk II (Damaged)",
-    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, damaged and inoperable. Repair it to restore function.",
+    "strDesc": "A full-size transfer station that quickly empties salvaged tanks into the ship's own stores, damaged and inoperable. Repair it to restore function.",
     "strItemDef": "ItmTankStationT2Dmg",
     "strType": "Item",
     "aInteractions": [
@@ -325,7 +325,7 @@
     "strName": "ItmTankStationT2DmgLoose",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Ryokka \"GX9\" Tank Station Mk II (Damaged, Loose)",
-    "strDesc": "A full-size transfer station that empties salvaged tanks into the ship's own stores, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
+    "strDesc": "A full-size transfer station that quickly empties salvaged tanks into the ship's own stores, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
     "strItemDef": "ItmTankStationT2DmgLoose",
     "strType": "Item",
     "aInteractions": [
@@ -551,7 +551,7 @@
     "strName": "ItmTankStationT4",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Corsair \"Vampire\" Tank Station Mk IV",
-    "strDesc": "Some say this is the product of a stolen Ryokka tank station and Belt Pirate ingenuity. Others say it works on witchcraft. On top of everything the Mk III does, the Mk IV locks onto a targeted ship and siphons its reserves across open space. It has a short range and is best used on targets that can't fight back, though its ability to operate at reduced effectiveness beyond engagement ranges is feared by all factions across Ceres. RCS reserves vanish first, then fusion fuel. Wire it to ship power and set the panel to AUTO or ON. With DUMP MODE on (right-click the unit), sources keep draining even when your tanks are full, venting the excess. Useful if you want to leave your target stranded in the black.",
+    "strDesc": "Some say this is the product of a stolen Ryokka tank station and Belt Pirate ingenuity. Others say it works on witchcraft. On top of everything the Mk III does, the Mk IV establishes a connection with any selected ship and siphons its reserves across open space. It has a short range and is best used on targets that can't fight back. However, it can be used at reduced effectiveness outside the range of sensors or guns, an ability feared by all factions across Ceres. Wire it to ship power and set the panel to AUTO or ON. With DUMP MODE on (right-click the unit), sources keep draining even when your tanks are full, venting the excess. Useful if you want to leave your target stranded in the black.",
     "strItemDef": "ItmTankStationT4",
     "strType": "Item",
     "aInteractions": [
@@ -611,7 +611,7 @@
     "strName": "ItmTankStationT4Loose",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Tank Station Mk IV (Loose)",
-    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
     "strItemDef": "ItmTankStationT4Loose",
     "strType": "Item",
     "aInteractions": [
@@ -650,7 +650,7 @@
     "strName": "ItmTankStationT4Dmg",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Tank Station Mk IV (Damaged)",
-    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, damaged and inoperable. Repair it to restore function.",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, damaged and inoperable. Repair it to restore function.",
     "strItemDef": "ItmTankStationT4Dmg",
     "strType": "Item",
     "aInteractions": [
@@ -690,7 +690,7 @@
     "strName": "ItmTankStationT4DmgLoose",
     "strNameShort": "Tank Station",
     "strNameFriendly": "Tank Station Mk IV (Damaged, Loose)",
-    "strDesc": "Corsair-tech remote transfer station that can siphon a target-locked ship's reserves across open space, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
+    "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
     "strItemDef": "ItmTankStationT4DmgLoose",
     "strType": "Item",
     "aInteractions": [

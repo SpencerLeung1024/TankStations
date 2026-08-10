@@ -82,9 +82,13 @@ internal static class NavLabel
                 return;
             }
             _label.text = text;
-            float num2 = Mathf.Clamp((float)cx, 130f, drawPanel.rect.width - 130f);
-            float num3 = ((cy <= (double)drawPanel.rect.height - 60.0) ? 52f : (-52f));
-            _labelTransform.anchoredPosition = new Vector2(num2 - orbitDraw.vCanvasOffset.x, (float)cy - orbitDraw.vCanvasOffset.y + num3);
+            // Try to place to the right of the crosshair. Personal preference
+            cx += 120.0;
+            _label.alignment = TextAlignmentOptions.Left;
+            // Clamp to within the panel
+            float cxclamped = Mathf.Clamp((float)cx, 80f, drawPanel.rect.width - 80f);
+            float cyclamped = Mathf.Clamp((float)cy, 60f, drawPanel.rect.height - 60f);
+            _labelTransform.anchoredPosition = new Vector2(cxclamped - orbitDraw.vCanvasOffset.x, cyclamped - orbitDraw.vCanvasOffset.y);
             SetActive(true);
         }
         catch (Exception ex)
@@ -137,7 +141,7 @@ internal static class NavLabel
     {
         if (target.LoadState >= Ship.Loaded.Edit)
         {
-            return "SIPHON: target is loaded (boarding range state) - contact drain via real tanks";
+            return "SIPHON OFF - DOCKED SHIP";
         }
         ShallowFuel.TemplateInv inventory = ShallowFuel.GetInventory(target);
         if (inventory == null)
@@ -147,20 +151,23 @@ internal static class NavLabel
         StringBuilder stringBuilder = new StringBuilder();
         if (distKm > (double)maxKm)
         {
-            stringBuilder.Append("SIPHON OUT OF RANGE\n").Append(Fmt(distKm)).Append(" km > ").Append(Fmt(maxKm)).Append(" km");
-        }
-        else if (distKm > (double)fullKm)
-        {
-            stringBuilder.Append("SIPHON ").Append(Fmt(distKm)).Append(" km - flow ").Append((int)Math.Round(100.0 * (double)fullKm / distKm)).Append("%");
+            stringBuilder.Append("OUT OF RANGE - ").Append(Fmt(distKm)).Append(" km");
         }
         else
         {
-            stringBuilder.Append("SIPHON ").Append(Fmt(distKm)).Append(" km - full flow");
+            // This is a static, calculated by TankStation.Run, and sums effective L/s for all T4 tank stations
+            stringBuilder.Append("SIPHON ").Append(Fmt(TankStation.EffectiveLPerSec)).Append(" L/s - ").Append(Fmt(distKm)).Append(" km");
         }
+
         bool flag = TankStation.RemoteTargetRegID == target.strRegID;
         bool flag2 = false;
         for (int i = 0; i < 4; i++)
         {
+            // 2026-08-09: Disable O2 remote drain. This change here is to drop line count from 5 to 4.
+            if (i == 0)
+            {
+                continue;
+            }
             double num = ShallowFuel.AvailableKg(target, inventory, i);
             double num2 = (flag ? TankStation.RemoteKgPerSec[i] : 0.0);
             if (num > 0.1 || num2 > 0.001)
@@ -220,7 +227,7 @@ internal static class NavLabel
             _label.color = LabelColor;
             _label.textWrappingMode = TextWrappingModes.NoWrap;
             _label.overflowMode = TextOverflowModes.Overflow;
-            _label.rectTransform.sizeDelta = new Vector2(260f, _label.rectTransform.sizeDelta.y);
+            _label.rectTransform.sizeDelta = new Vector2(160f, _label.rectTransform.sizeDelta.y);
         }
         SetActive(false);
     }
