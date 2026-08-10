@@ -1028,3 +1028,18 @@ deliberately NOT investigated this session — user's next fresh task. Relevant 
 that happens: NavData.cs:163 (torch burn bookkeeping), ShipSitu.TimeAdvance, FlyTo /
 FlyToManual / FlyToPath commands, Maneuver/StopManeuver (Ship.cs:7285-7291), AIShipManager
 Update loop (:1940s), PiratePilot/HaulerCargoPilot behavior trees, Comms SHIPSos* messages.
+
+### Session 5 Testing (2026-08-10)
+1. Turbo: with a freshly `spawn`ed set of tanks stations, turbo works. 6000 L/s with Turbo on, 30 L/s with Slow on, clicking Slow disables Turbo and vice versa
+2. Tank stations not running while I'm standing on a derelict: fixed
+3. Trying to drain a station like OKLG: confirmed "SIPHON OFF - STATION"
+4. Trying to drain an unvisited derelict: with default config (true), draining is possible. with (false), confirmed "SIPHON OFF - UNVISITED DERELICT\n(DISABLED IN CONFIG)"
+5. Feasibility study of adding a new resource, such as StatLiqH2O from Ship's Water or any new resource from a game update: I am making the decision to lock down the current resource set {O2, N2, He3, D2O} loaded, {N2, He3, D2O} remote for the first release. The benefit of salvaging hundreds of bucks worth of water is not worth the risk of breaking Tank Stations for myself, or players who don't have Ship's Water installed. The deciding factor is that checks for whether an item (can) fits in the tank station's internal inventory are JSON, which should not be tampered with using C# willy-nilly. Re-evaluate as demands and content change
+6. WORKSHOP.md describing what Tank Stations does to a steam audience: I will keep this in mind when I release
+7. NPC lifecycle and why the Ceres civilians I'm draining can still complete their torch burns: for you to investigate now
+a. I have confirmed that N2 decreases as NPCs make RCS manuvers by looking at various NPC ships.
+b. I have confirmed that with Keep Drain Victims disabled, sucking a *OKLG* pirate dry does not make them despawn, at least not immediately. Approaching within their 30 km chase range causes them to target lock you. They sit motionless, so it looks like N2 mobility kill is real. They still do not despawn, at least not immediately
+c. Missiles are apparently ships with 1500 kg of N2. The default T4 flow rate and range isn't enough to suck out all the N2 before it paths to your ship, but with turbo mode on and enough config sliding even stranding missiles should be possible
+d. In combat, ships use RCS N2. They use it to accelerate a couple hundred m/s towards you initially, and to turn to fire their forward guns. If they run out of N2 they continue their spin uncontrollably and become easy pickings. They do not despawn, at least not immediately. Keep Drain Victims disabled
+`C:\Users\spenc\AppData\LocalLow\Blue Bottle Games\Ostranauts\Player.log` (at the time of talking to you) is from me mobility killing a Vector3 Pirate Refit (~1400 kg N2), followed by a Babak Refit (~7000 kg N2) joining the battle and getting mobility killed too. `[Info   :Tank Stations] [TankStation 3c0bf4df-1e54-4631-b03f-ef98c3766ca7]...` is what happened each pump
+I'd say N2 mobility kills work as expected. I still don't know the details of ship despawning when out of fuel, but I need way more testing, to the point that this mod would never get released.

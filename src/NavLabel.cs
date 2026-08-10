@@ -141,11 +141,11 @@ internal static class NavLabel
     {
         if (target.IsStation())
         {
-            return "NO SIPHON - stations cannot be drained";
+            return "SIPHON OFF - STATION";
         }
         if (TankStation.RemoteSiphonBlocked(target))
         {
-            return "NO SIPHON - unvisited derelict (disabled in config)";
+            return "SIPHON OFF - UNVISITED DERELICT\n(DISABLED IN CONFIG)";
         }
         if (target.LoadState >= Ship.Loaded.Edit)
         {

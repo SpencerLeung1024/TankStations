@@ -610,7 +610,7 @@
   {
     "strName": "ItmTankStationT4Loose",
     "strNameShort": "Tank Station",
-    "strNameFriendly": "Tank Station Mk IV (Loose)",
+    "strNameFriendly": "Corsair \"Vampire\" Tank Station Mk IV (Loose)",
     "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, uninstalled. Install it on a clear 3x3 patch of floor and run a conduit to any tile touching it.",
     "strItemDef": "ItmTankStationT4Loose",
     "strType": "Item",
@@ -649,7 +649,7 @@
   {
     "strName": "ItmTankStationT4Dmg",
     "strNameShort": "Tank Station",
-    "strNameFriendly": "Tank Station Mk IV (Damaged)",
+    "strNameFriendly": "Corsair \"Vampire\" Tank Station Mk IV (Damaged)",
     "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, damaged and inoperable. Repair it to restore function.",
     "strItemDef": "ItmTankStationT4Dmg",
     "strType": "Item",
@@ -689,7 +689,7 @@
   {
     "strName": "ItmTankStationT4DmgLoose",
     "strNameShort": "Tank Station",
-    "strNameFriendly": "Tank Station Mk IV (Damaged, Loose)",
+    "strNameFriendly": "Corsair \"Vampire\" Tank Station Mk IV (Damaged, Loose)",
     "strDesc": "Corsair-tech remote transfer station that can siphon a ship's reserves across open space, uninstalled and damaged. Repair it, then install it on a clear 3x3 patch of floor.",
     "strItemDef": "ItmTankStationT4DmgLoose",
     "strType": "Item",
