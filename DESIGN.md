@@ -1043,3 +1043,108 @@ c. Missiles are apparently ships with 1500 kg of N2. The default T4 flow rate an
 d. In combat, ships use RCS N2. They use it to accelerate a couple hundred m/s towards you initially, and to turn to fire their forward guns. If they run out of N2 they continue their spin uncontrollably and become easy pickings. They do not despawn, at least not immediately. Keep Drain Victims disabled
 `C:\Users\spenc\AppData\LocalLow\Blue Bottle Games\Ostranauts\Player.log` (at the time of talking to you) is from me mobility killing a Vector3 Pirate Refit (~1400 kg N2), followed by a Babak Refit (~7000 kg N2) joining the battle and getting mobility killed too. `[Info   :Tank Stations] [TankStation 3c0bf4df-1e54-4631-b03f-ef98c3766ca7]...` is what happened each pump
 I'd say N2 mobility kills work as expected. I still don't know the details of ship despawning when out of fuel, but I need way more testing, to the point that this mod would never get released.
+
+### Session 6 (2026-08-10) — NPC lifecycle investigation: why torch ships ignore empty tanks
+
+**Why a drained NPC on a torch burn keeps accelerating (root cause, confirmed in code + save data):**
+
+1. **NPC long-range flight is on rails.** `ShipSitu.TimeAdvance` (`ShipSitu.cs:354-358`): if
+   `HasNavData()`, movement is 100% `NavData.TimeAdvance` — a lerp between precomputed waypoints
+   (`NavData.cs:101-123`). No fuel check exists in the movement path. Waypoints are plotted by
+   `FlyToPath.PlotBurnLoop` with per-point `FuelLevel` (RCS kg) and `TorchFuelLevel` (torch sec).
+2. **The plan rewrites the fuel field every frame.** During torch segments,
+   `NavData.TimeAdvance:163` does `_shipUs.fShallowFusionRemain = num5` — a SET to the plan's
+   interpolated value (shallow ships only; loaded ships go through `FusionIC.SetReactants`).
+   Our drain (ShallowFuel.RecomputeFusionSeconds) writes 0; the next physics frame restores the
+   plan value. The field is effectively read-only while a torch plan is active. Same for RCS on
+   RCS plans (`:135` RemoveGasMass drives `fShallowRCSRemass` down per the plan, not per reality).
+3. **AI torch plots are never fuel-validated.** `FlyToPath.RunCommand:119` rejects only
+   non-torch plans arriving with RCS ≤ 0. Torch plans can go arbitrarily negative: save-file
+   evidence (`O-MJK`, MesaCargo, vanilla) shows `bIsTorching:true` with waypoint TorchFuelLevel
+   94245 → **-528528**. A ship plotted at fShallowFusionRemain=0 would fly a negative plan fine.
+4. **The only in-flight torch check doesn't apply to NPCs.** `FlyToAutoPilot.RequirementsMet`
+   (`FlyToAutoPilot.cs:91-111`) disengages on low torch fuel — but `FlyToAutoPilot` is used ONLY
+   by `AIType.Auto` (ship-delivery ferries). Normal pilots (Scav/Civilian/Pirate/Hauler/Navy) run
+   `FlyTo`→`FlyToPath`, which returns `Running` whenever NavData exists (zero per-tick checks).
+   `DeltaVRemainingFusion` (Ship.cs:8756) is dead code — nothing calls it.
+5. **Out-of-fuel despawn is gated on having no plan.** `FlyTo.RunCommand:102`:
+   `IsOutOfFuelApproximation()` only runs when `!HasNavData()`. Plus the torch exemption:
+   `IsInterregionalPath && bFusionReactorRunning → not out of fuel` (`FlyTo.cs:148`,
+   `AmIOutOfFuel.cs:31`, `AIShipManager.GetDeltaVNeededToTargetFullTrip:1272`).
+   `bFusionReactorRunning` is STALE-TRUE on shallow torch ships: templates bake
+   `bFusionTorch:true` (Tombolo 2, Heavy Tug 01, …), and `Ship.PostUpdate:2774-2781` (which
+   clears it) early-returns for `LoadState < Edit`.
+6. **Net effect:** drain a torching NPC dry → ledger credited, `fShallowFusionRemain` instantly
+   restored by the plan → ship completes the burn, docks or replots (torch plot always valid) →
+   flies forever on phantom fuel. The mobility kill works ONLY for RCS: `Maneuver` →
+   `RemoveGasMass` returns 0 at empty → `StopManeuver` (`Ship.cs:7285-7290`), and RCS replots get
+   rejected (arrival fuel ≤ 0) → 5 rejections → FlyTo Failure → out-of-fuel path. That's why the
+   user's N2 kills strand ships but He3/D2O kills don't.
+7. Also explains the label observation: on a torch plan our AvailableKg only drifts down at the
+   plan's burn rate (small over a 10-min decel vs the 4-digit kg display), and N2 stays flat
+   (torch plans keep waypoint FuelLevel constant). Save evidence from the stranded Heavy Tug
+   (`O-8JGZ`): `fShallowFusionRemain: 0.0`, no `jnd` — the field persists at 0 only because the
+   ship has no active plan.
+
+**Candidate fix (NOT implemented — design decision):** when our drain zeroes the limiting
+reactant, also (a) `target.objSS.ResetNavData()` and (b) `target.bFusionReactorRunning = false`.
+(a) alone is insufficient: the replot would originate from fShallowFusionRemain=0 but torch
+plots aren't fuel-validated → new phantom plan. With (b), plots fall back to RCS accel, which
+with 0 N2 gets rejected → ship goes inert → out-of-fuel chain (victim-kept or SOS/despawn).
+Safe for shallow ships: the flag is stale there anyway; real reactor code re-sets it on load
+(FusionIC.cs:916) and PostUpdate re-clears it for loaded ships without a ready reactor.
+Side effect to consider: phantom-fuel flight is vanilla behavior for ANY NPC that outburns its
+tanks (NPCs never refuel fusion — `AIRefuel` tops RCS only, Ship.cs:7641-7644) — fixing it for
+drain victims makes drained ships strictly more stranded than vanilla naturally-stranded ones.
+
+**NPC life cycle (commands each pilot type runs):** all pilots share
+`Main: Undock → FlyTo → Dock → Hold` (Civilian/Scav) with combat/threat branches; Navy/Blockade
+use FlyToPatrol; Haulers use HaulShip/DockCargoAndDespawn flows. AI ticks via
+`AIShipManager.RunAIQueue` (not every frame). Targets from pilot `GetTarget()` gated by
+`LowFuel`/`BingoFuelCheck` (RCS-based only). Normal end-of-life: `Dock` at a station →
+`CrewSim.DockAndDespawn` (crew transfers, ship hidden, unregistered). `SosOutOfFuel` and
+`AmIOutOfFuel` commands are DEAD CODE (never instantiated; confirmed no data refs).
+
+**Despawn paths vs "Keep Drain Victims" (both patches):**
+
+BLOCKED (go through `AIShipManager.UnregisterShip(AIShip)` or `FlyTo.TryInstantCleanup`):
+- Out-of-fuel SOS chain: `FlyTo.RequestHelp` (FlyTo.cs:165 pirate/hauler/navy/civilian instant
+  unregister; :182 scav far from player after SHIPSosStranded). Scav NEAR player just sends
+  SHIPSosAskPlayer and stays — no unregister, nothing to block.
+- `FlyToPatrol:29` — 8+ rejected path plots (Navy/Blockade patrols).
+- `HaulerCargoPilot.GetTarget:110` — bingo-fuel hauler self-despawn.
+- `HaulShip:105` — hauler retriever towing a derelict with DeltaVRemainingRCS ≤ 0.
+- `CrewSim.DockAndDespawn:3932` — NORMAL station-dock despawn. Blocked → ship stays AI-registered
+  AND hidden (ToggleVis/HideFromSystem already ran). See leak note below.
+- `AIShipManager.ValidateCrew:1319` — all crew dead/KO.
+- Police recycling `AIShipManager:1725` (6h unscanned LEO) — partially: the paired
+  `ship.Destroy()` for hidden ships still tears them down (teardown guard allows).
+- `NavData.TimeAdvance:215` — autopilot abort on core-temp excursion (loaded ships, Auto only).
+- `DamageSystem:477/933` — nav station destroyed by damage → unregister + Drift.
+- Misc: RemoveAI/Blank/FlyToMissile/PirateShakeDown; SosOutOfFuel (dead code anyway).
+
+NOT BLOCKED (bypass the choke points — victims still despawn):
+- **Region cleanup**: player crosses an ATC boundary → `RegionCleanup`→`AIShipCleanup` →
+  crew relocated + `ship.Destroy()` directly (AIShipManager.cs:836). Victims in the old region
+  are recycled. Correct and necessary (the teardown guard permits it).
+- **Stale reaper**: `StarSystem.CleanupStaleShips` (every 120 s) destroys ships with
+  IsStale 3h+ AND unvisited 3h+. Our patches stop IsStale being STAMPED, but a ship that was
+  already stale before becoming a victim (e.g. you drain a ship vanilla stranded hours ago)
+  is still reaped. Force-test: `addcond CO-<regID> IsStale 1`.
+- **Destruction**: reactor-destroyed scuttle chance (DamageSystem:489-491), explosion/Destroy.
+- **Dock-despawn recycling leak**: DockAndDespawn hides the ship BEFORE the blocked unregister,
+  so a victim that reaches a station becomes a hidden husk that `AIShip.FindShipForFaction`
+  can recycle into a new spawn. `ResetShipState` does NOT clear ShipCO conds → the recycled
+  ship keeps IsTankDrainVictim (can never fuel-despawn again) and any un-reconciled kg ledger
+  (ghost-drained on its next load). Known edge case; candidate fix: clear victim+ledger conds
+  when a ship is recycled/hidden (or in DockAndDespawn via a prefix).
+
+**Test observability (this session):** the two patches now log when they block (Verbose Logging
+gated): "KeepDrainVictims: blocked UnregisterShip/TryInstantCleanup for <regID>". Debug console
+(F3; no unlockdebug needed for console commands): ShipCO conds are reachable as `CO-<regID>`
+(e.g. `getcond CO-O-8JGZ IsTankDrain` — partial match; `addcond CO-O-8JGZ IsTankDrainVictim 1`
+marks a ship without draining it; `addcond CO-O-8JGZ IsStale 1` force-stales it).
+`AIShipManager.ShowDebugLogs` is a public static, not console-exposed. Save inspection:
+`Saves/<name>/<name>.zip` → `ships/<regID>.json`: `fShallowRCSRemass`, `fShallowFusionRemain`,
+`bFusionTorch`, `objSS.jnd.aPoints[]` (`FuelLevel`/`TorchFuelLevel` per waypoint),
+`shipCO.aConds` (our ledger + victim conds persist through save/load — verified).

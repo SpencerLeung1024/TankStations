@@ -20,6 +20,10 @@ internal static class Patch_UnregisterShip
             Ship ship = aiShip?.Ship;
             if (Plugin.KeepDrainVictims.Value && ship != null && !ship.bDestroyed && ship.ShipCO != null && ship.ShipCO.HasCond(ShallowFuel.VictimCond) && !ShipIsBeingTornDown(ship))
             {
+                if (Plugin.VerboseLogging.Value)
+                {
+                    Plugin.Log.LogInfo($"[TankStations] KeepDrainVictims: blocked UnregisterShip for {ship.strRegID} ({ship.json?.strName}) - ship stays registered and inert.");
+                }
                 return false; // skip: keep the drained ship registered and inert
             }
         }
@@ -55,6 +59,10 @@ internal static class Patch_TryInstantCleanup
             Ship shipUs = __instance?.ShipUs;
             if (Plugin.KeepDrainVictims.Value && shipUs != null && !shipUs.bDestroyed && shipUs.ShipCO != null && shipUs.ShipCO.HasCond(ShallowFuel.VictimCond))
             {
+                if (Plugin.VerboseLogging.Value)
+                {
+                    Plugin.Log.LogInfo($"[TankStations] KeepDrainVictims: blocked TryInstantCleanup (IsStale backdate) for {shipUs.strRegID} ({shipUs.json?.strName}).");
+                }
                 return false; // skip: don't backdate IsStale on a drain victim
             }
         }
