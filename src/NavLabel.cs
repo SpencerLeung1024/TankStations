@@ -139,6 +139,14 @@ internal static class NavLabel
     // last-tick record; remaining from ShallowFuel's template/ledger model.
     private static string BuildText(Ship target, double distKm, float fullKm, float maxKm)
     {
+        if (target.IsStation())
+        {
+            return "NO SIPHON - stations cannot be drained";
+        }
+        if (TankStation.RemoteSiphonBlocked(target))
+        {
+            return "NO SIPHON - unvisited derelict (disabled in config)";
+        }
         if (target.LoadState >= Ship.Loaded.Edit)
         {
             return "SIPHON OFF - DOCKED SHIP";

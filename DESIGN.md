@@ -961,3 +961,70 @@ This discrepancy can be seen in fShallowFusionRemain too. If you shoot out part 
 - - Investigate but do not implement, just tell me a feasibility study: Given the current architecture, how would I add CO2, water, or any new resource in a game update or mod? What refactors could be made to make Tank Stations easier to maintain?
 - - Provide with your context here, so we don't lose information between tasks: Can you give me a section that describes how to get a tank station and the usage pattern, as well as a section with a list of gotchas or weird behavior? Things that you and I found out, but would be unintuitive to someone who downloaded the mod?
 - - Provide any relevant information you have, but do not do additional investigation or implement now. This task is getting pretty long and our "part" (gas transfer) is done. Next fresh task is figuring out what rules NPCs follow: What is the NPC life cycle? What does it mean for an NPC to be idle, using RCS, using torch, evading, etc? When do they consume fShallowRCSRemass and fShallowFusionRemain? When do they check those?
+
+### Session 5 (2026-08-09, part 2) — "Your turn" list done; player docs written
+
+**Turbo — no code change needed, root cause is save data.** Stations that already exist in a
+save carry their conds frozen from spawn time; a station spawned with the broken `IsTurbo=20.0x1`
+def keeps multiplier 1.0 forever (cond restore overrides the fixed def). User decision: no
+migration/repair path — the mod is unpublished, so all players will get correct `1.0x20.0`
+stations. Retest turbo on a FRESHLY spawned/purchased station.
+
+**Stations pausing when off-ship — fixed.** Run() now scans every loaded ship registered to the
+player (`CrewSim.GetAllLoadedShips()` + `GetShipOwner(regID) == coPlayer.strID`, the vanilla
+ownership-check pattern from StarSystem.cs:1108) instead of `coPlayer.ship` (which follows the
+player's feet). Stations keep running while you board a derelict or walk around OKLG. Fallback:
+if no owned loaded ship has stations, the ship you're standing on is scanned (edge-case
+ownership). Consequence: a station installed on a ship you don't own never runs — documented in
+the gotchas. Note dsts/T3/T4 always used `station.ship` already, so only the scan changed.
+
+**Nav label texts:** stations show "NO SIPHON - stations cannot be drained"; config-blocked
+derelicts show "NO SIPHON - unvisited derelict (disabled in config)". User's right-of-target
+placement, "SIPHON OFF - DOCKED SHIP", and EffectiveLPerSec header kept as-is.
+
+**"Siphon Unvisited Derelicts" config (default true):** gates remote drain of derelicts with
+`fLastVisit == 0` (never boarded). Shared helper `TankStation.RemoteSiphonBlocked(target)` used
+by both the T4 block and the label. Description text warns about the missing 0-100% break-in
+fill and un-subtracted combat losses.
+
+**Player docs:** `WORKSHOP.md` (repo root) has the acquisition table, usage pattern, and the
+gotchas list — written to be pasted into the Steam description (convert tables to BBCode by
+hand; strNotes supports BBCode). Permission credits for Valtorra (granted 2026-08-08) and
+EddieSM (pending) are noted there; keep the EddieSM credit in sync with the permission outcome.
+
+**Feasibility study — adding a resource (CO2 / Ship's Water H2O / future dev resources):**
+
+Current per-resource touch points:
+1. `TankStation.Res[]` — one ResSpec row (Name, VesselCond, Species|null, Stat, Density,
+   DstCT, DumpForced, MinTier). Local (hopper/docked) transfer then works with zero extra code:
+   MoveGas/MoveLiquid/AddGas/AddLiquid are all table-driven. The DstCT must exist in data (ours
+   or another mod's — referenced by string only at runtime, safe).
+2. `ShallowFuel` parallel arrays — Names, ContentStat, VesselCond, MolarMass (+IdxOf adapts).
+   Needed only if the resource should be REMOTELY drainable (T4). Gases additionally get the
+   virtual-volume identity for free (rated RTA P/T).
+3. `conditions_tankstations.json` — the `StatTankDrain<X>` ledger cond (H2O already defined).
+4. condowners/condtrigs JSON — the hopper fit CTs (TIsFitTankStationT1/T2) if the resource's
+   tanks should go INTO the hopper.
+
+For Ship's Water specifically (§10 soft dep): all H2O references must be runtime-string-only,
+guarded by `DataHandler.GetCond("StatLiqH2O") != null && GetCondTrigger("TIsWaterVesselInstalled")
+!= null` at LoadComplete. That means the RES/ResSpec rows must become runtime-built lists
+(append the H2O row when detected) instead of static readonly arrays — the one refactor that
+also kills the "two parallel lists" hazard: make a single canonical table (one record type with
+all fields: name, vesselCond, species, contentStat, molarMass, density, dstCT, dumpForced,
+minTier, ledgerCond) consumed by both TankStation and ShallowFuel. Hopper acceptance of water
+tanks is the hard part: our JSON fit CTs can't name IsVesselWater without breaking mod-less
+installs, so v1 water support would be remote-drain-only (hopper stays gas/He3/D2O) unless a
+missing-cond-tolerance test in the CT evaluator proves safe. CO2 remote-drain is pointless
+gameplay-wise (no NPC use, per user) — skip; if ever wanted it's rows 1+2 only.
+
+Other maintainability notes: `EffectiveLPerSec`/`RemoteKgPerSec`/`RemoteTargetRegID` statics
+could become a small RemoteStatus class (cosmetic only); the ISource abstraction (CO-backed vs
+shallow-ledger-backed) is only worth introducing if a THIRD source kind ever appears.
+
+**NPC lifecycle / mobility-kill reliability** (torch ships continuing plotted burns with dry
+tanks; when AI checks fShallowRCSRemass/fShallowFusionRemain; evade triggers; SOS conditions):
+deliberately NOT investigated this session — user's next fresh task. Relevant entry points when
+that happens: NavData.cs:163 (torch burn bookkeeping), ShipSitu.TimeAdvance, FlyTo /
+FlyToManual / FlyToPath commands, Maneuver/StopManeuver (Ship.cs:7285-7291), AIShipManager
+Update loop (:1940s), PiratePilot/HaulerCargoPilot behavior trees, Comms SHIPSos* messages.

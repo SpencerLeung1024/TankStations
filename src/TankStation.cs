@@ -100,13 +100,12 @@ internal static class TankStation
 
     public static void Run()
     {
-        Ship ship = CrewSim.coPlayer?.ship;
-        if (ship == null)
+        if (CrewSim.coPlayer == null)
         {
             _fLast = -1.0;
             _lastStatus.Clear();
             return;
-        } // Ship exists
+        } // Player exists
         CondTrigger condTrigger = DataHandler.GetCondTrigger(InstalledCT);
         if (condTrigger == null)
         {
@@ -115,8 +114,32 @@ internal static class TankStation
         EffectiveLPerSec = 0.0;
         Array.Clear(RemoteKgPerSec, 0, RemoteKgPerSec.Length);
         RemoteTargetRegID = null;
-        List<CondOwner> iCOs = ship.GetICOs1(condTrigger, bSubObjects: false, bAllowDocked: false, bAllowLocked: true);
-        if (iCOs == null || iCOs.Count == 0)
+        // Scan every loaded ship the player OWNS, not just the one they're standing on:
+        // CrewSim.coPlayer.ship follows the player's feet, so with the old SafePump-style scan
+        // the stations paused while you were aboard a derelict or shopping inside a station.
+        List<CondOwner> iCOs = new List<CondOwner>();
+        string strID = CrewSim.coPlayer.strID;
+        List<Ship> allLoadedShips = CrewSim.GetAllLoadedShips();
+        if (allLoadedShips != null)
+        {
+            foreach (Ship item in allLoadedShips)
+            {
+                if (item != null && !item.bDestroyed && CrewSim.system != null && CrewSim.system.GetShipOwner(item.strRegID) == strID)
+                {
+                    CollectStationsOn(item, condTrigger, iCOs);
+                }
+            }
+        }
+        if (iCOs.Count == 0)
+        {
+            // Fallback for ownership edge cases: the ship the player is standing on.
+            Ship ship = CrewSim.coPlayer.ship;
+            if (ship != null && !ship.bDestroyed)
+            {
+                CollectStationsOn(ship, condTrigger, iCOs);
+            }
+        }
+        if (iCOs.Count == 0)
         {
             _fLast = StarSystem.fEpoch;
             return;
@@ -209,7 +232,7 @@ internal static class TankStation
         if (tier >= 4 && !reverse && ship != null)
         {
             Ship ship2 = GUIOrbitDraw.CrossHairTarget?.Ship;
-            if (ship2 != null && !ship2.bDestroyed && ship2 != ship && !ship2.IsStation() && (allDocked == null || !allDocked.Contains(ship2)))
+            if (ship2 != null && !ship2.bDestroyed && ship2 != ship && !ship2.IsStation() && !RemoteSiphonBlocked(ship2) && (allDocked == null || !allDocked.Contains(ship2)))
             {
                 double num = ship.objSS.GetRangeTo(ship2.objSS) * (double)CrewSim.KM_PER_AU;
                 float value = Plugin.T4FullRangeKm.Value;
@@ -769,6 +792,20 @@ internal static class TankStation
         {
             Collect(ship, station, _ctDsts[i], dsts[i], Res[i].Species != null);
         }
+    }
+
+    private static void CollectStationsOn(Ship ship, CondTrigger ct, List<CondOwner> outp)
+    {
+        List<CondOwner> iCOs = ship.GetICOs1(ct, bSubObjects: false, bAllowDocked: false, bAllowLocked: true);
+        iCOs?.ForEach(outp.Add);
+    }
+
+    // Config gate: siphoning a derelict nobody has visited yet uses template values - the random
+    // 0-100% break-in fill is not applied and combat-destroyed tanks are not subtracted, so the
+    // take can exceed what the realized ship would have had. fLastVisit == 0 means never visited.
+    public static bool RemoteSiphonBlocked(Ship target)
+    {
+        return !Plugin.SiphonUnvisitedDerelicts.Value && target.IsDerelict() && target.fLastVisit == 0.0;
     }
 
     // Tier 3+ source collection from a docked ship: its loose RCS-intake cans plus its installed
