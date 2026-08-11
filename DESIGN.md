@@ -1399,3 +1399,27 @@ not in the game world" state), then a later teardown/recycle let UnregisterShip 
 torch budget (negative plan TorchFuelLevel, e.g. that MesaCargo) read as "all fusion burned" to
 AvailableKg → only the non-limiting excess (D2O) is drainable, and draining it victim-marks and
 strands a ship that vanilla would have let phantom-fly. Wile E. Coyote accepted.
+
+### Session 7 Testing (2026-08-10)
+- Confirmed that the Tombolo 2 is finally stranded
+- - When loading in, before opening any nav map, went to my T4 and set it to off
+- - Checked the Tombolo 2 on the nav map. Its relative velocity is changing by about 20 m/s (2 G)
+- - Turned the T4 on
+- - Started siphoning the Tombolo 2. Its relative velocity stopped changing, indicating our kill block ran even while NavData is null
+- - I then matched speed and force docked. Austin Spears did not like that
+- - 500 km from BCER moving at 10 km/s, a Pequod Titan Refit target locked me and salvoed 4 missiles
+- - This is the third ship to have target locked me since I started chasing O-78ML. The previous two were Vector3 Titan Refits which only have coilguns, so couldn't turn fast enough to get firing solutions for their coilguns
+- - By rotating before impact, my ship is fine, but the Tombolo 2 ate 4 missiles. So much for "keep a non-combat-damaged ship for goodies"
+- - Austin Spears declined to comment (IsDead)
+- What makes GalFed goons attack you?
+- - This is not related to the Tank Stations mod (unless I somehow changed AI behavior) but I want to know
+- - People in the community have said that although at the start of the game both CCRE and GalileanConfederacy are neutral to you, there is a chance that a particular NPC captain wakes up on the wrong side of the bed and starts shooting when they see you
+- - I got three ships on my ass, two of which happened before I forced docked (unfriendly action) which made me suspicious
+- - I know one of the options when you call OKLG is "SOS threats nearby" or something, and I wondered if NPC ships have a similar option
+- - CivilianPilot.cs references AreThreatsNearby.cs, AmIBeingTargeted.cs, and SosThreatApproaching.cs
+- - Interestingly, AmIBeingTargeted uses
+                bool flag = item.shipCombatTarget == base.ShipUs;
+                if (!flag && GUIOrbitDraw.CrossHairTarget != null && GUIOrbitDraw.CrossHairTarget.Ship == base.ShipUs)
+- - Obviously if you have track warn that's a pretty good sign you're being targeted. But as the player, even selecting their ship to view their range, velocity, and other stuff (and siphoning them in my case) is enough to make them paranoid
+- - I can't follow the rest of the logic though. Is the player always a threat? Does having a ship with weapons make you a threat?
+- I have removed flag3 (IsTankDrainVictim if 90% of a resource has been drained) from ShallowFuel.cs MaybeMarkVictim

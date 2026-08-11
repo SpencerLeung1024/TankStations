@@ -227,6 +227,7 @@ internal static class ShallowFuel
         // 2026-08-10: Ship AI never actually checks if it runs out of fuel or has negative fuel. Use 60 seconds as our threshold
         bool flag2 = target.fShallowFusionRemain <= 60.0 && inv.BakedFusionSec > 0.0;
         Plugin.Log.LogInfo($"{flag2}: target.fShallowFusionRemain = {target.fShallowFusionRemain} inv.BakedFusionSec = {inv.BakedFusionSec}");
+        /*
         bool flag3 = false;
         for (int i = 0; i < Names.Length; i++)
         {
@@ -237,7 +238,9 @@ internal static class ShallowFuel
                 break;
             }
         }
-        if (flag || flag2 || flag3)
+        */
+        //if (flag || flag2 || flag3)
+        if (flag || flag2)
         {
             target.ShipCO.SetCondAmount(VictimCond, 1.0);
             return true;
