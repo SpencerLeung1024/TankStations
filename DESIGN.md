@@ -1365,3 +1365,37 @@ IsTankDrainVictim (Fuel Drained) = 1
 - Once I finally make that Tombolo 2 stop thrusting and verify mobility kill of RCS trajectories, torch trajectories, and combat, I'll consider T4 and this mod feature complete
 - I'm actually thinking of removing flag3 of ShallowFuel.cs MaybeMarkVictim. It's very difficult to trigger the "90% of a resource removed" because different ships start with different amounts of fuel already burned. What matters is mobility kill, which flag and flag2 already achieve
 - I don't have a good answer for how to handle the case of stock torch burning ships that are on interplanetary journeys (like that MesaCargo) or have done runs around Ceres enough times to have fShallowFusionRemain < 0. As soon as you select them with a T4 our ShallowFuel.cs immediately sees a negative fShallowFusionRemain and strands them, like Wile E Coyote looking down moments before he falls
+
+### Session 7 (2026-08-10) — why the Tombolo 2 kept accelerating with no NavPlan (fixed)
+
+**Root cause: frozen `vAccIn`.** While a ship follows a plan, `NavData.TimeAdvance:107-114` writes
+the plan's burn acceleration into `objSS.vAccIn` (torch segments) / `objSS.vAccRCS` (RCS segments)
+every tick. `ResetNavData()` only nulls the plan — the LAST accel value stays frozen in the situ,
+and `ShipSitu.TimeAdvance`'s ballistic path (`ShipSitu.cs:391-418`: integrates
+vAccIn+vAccRCS+vAccLift+vAccDrag+vAccEx) keeps accelerating the ship on phantom thrust forever,
+consuming no fuel. The only clearers in vanilla: `StopManeuver` zeroes **vAccRCS only**
+(`Ship.cs:7500`) — which is why RCS-plan ships self-stranded (their AI failure path calls
+`Maneuver(0,0,0,0,1e-10)` → StopManeuver) — while `vAccIn` is cleared solely by `SetThrust(0)`
+(`Ship.cs:7113-7119`), called only for Edit+ ships (FlyToPath.TorchOff, NavData abort) and from
+`UnregisterShip` — which Keep Drain Victims blocks. Net: a torch-plan victim kept its last ~2 G
+forever. Fix (TankStation.cs kill block): on every drain tick against a victim, in addition to
+ResetNavData + clearing bFusionReactorRunning, call `target.SetThrust(0.0)` (zeroes vAccIn; safe
+on shallow ships — no audio, aWPs unused) and `target.objSS.ResetAccelerations()` (vAccRCS/lift/
+drag too; vAccEx gravity is re-added per frame by StarSystem.UpdateShip). Also restructured to run
+even when HasNavData() is false, so ships already frozen mid-burn (e.g. the current O-78ML save)
+are caught, and to re-kill any RCS replot the AI manages between our ticks (64 s pause timer and
+the 5-rejection counter throttle its attempts). Expected retest on O-78ML: target it, drain a
+tick of He3/D2O (it still has some), phantom burn dies immediately; it coasts ballistically (keeps
+its existing velocity — mobility kill stops thrust, not momentum), AI replots get RCS-rejected
+(N2 ≤ 1 kg, reactor flag off), RequestHelp → blocked unregister → inert victim.
+
+**O-CWL SFFWD disappearance:** no data-driven IsStale exists (only the two patched code writers +
+DestroyAndReload preserve). Most likely sequence during SFFWD: FFWD insta-dock → DockAndDespawn
+hid it (ToggleVis/HideFromSystem run BEFORE the blocked unregister — the "exists logically but
+not in the game world" state), then a later teardown/recycle let UnregisterShip through
+(ShipIsBeingTornDown guard) → IsStale stamped → reaped 3 game-hours later. The clean 16x watch
+(no SFFWD) kept O-CWL alive past the mark — treat SFFWD results as jank, 16x as truth.
+**Pre-existing edge acknowledged (no action):** ships that already burned past their template
+torch budget (negative plan TorchFuelLevel, e.g. that MesaCargo) read as "all fusion burned" to
+AvailableKg → only the non-limiting excess (D2O) is drainable, and draining it victim-marks and
+strands a ship that vanilla would have let phantom-fly. Wile E. Coyote accepted.

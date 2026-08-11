@@ -432,12 +432,24 @@ internal static class TankStation
                 // 2026-08-10: void -> bool, return value is whether the victim cond exists
                 bool mobilityKilled = ShallowFuel.MaybeMarkVictim(remoteTarget, remoteInv);
                 // 2026-08-10: If this ship is mobility killed and it has a NavData, clear the NavData
-                if (mobilityKilled
-                    && remoteTarget.objSS != null
-                    && remoteTarget.objSS.HasNavData())
+                if (mobilityKilled && remoteTarget.objSS != null)
                 {
-                    remoteTarget.objSS.ResetNavData();
-                    Plugin.Log.LogInfo($"ResetNavData for {remoteTarget.strRegID}");
+                    if (remoteTarget.objSS.HasNavData())
+                    {
+                        remoteTarget.objSS.ResetNavData();
+                        Plugin.Log.LogInfo($"ResetNavData for {remoteTarget.strRegID}");
+                    }
+                    // 2026-08-10: ResetNavData alone does NOT stop a burn in progress. While a plan
+                    // is followed, NavData.TimeAdvance writes the plan's burn acceleration into
+                    // objSS.vAccIn (torch) / vAccRCS (RCS) every tick; nulling the plan leaves the
+                    // last value frozen in place, and ShipSitu.TimeAdvance's ballistic path keeps
+                    // integrating it forever (no fuel consumed - the phantom burn the Tombolo 2 was
+                    // doing). StopManeuver only zeroes vAccRCS; vAccIn is cleared solely by
+                    // SetThrust(0), which vanilla only calls for loaded ships or from UnregisterShip
+                    // (which Keep Drain Victims blocks). Run every tick: the AI may replot between
+                    // our ticks (RCS plot if it still has N2), which restarts the accel writes.
+                    remoteTarget.SetThrust(0.0);
+                    remoteTarget.objSS.ResetAccelerations();
                     // For reactor ships, also disable their reactor (torch trajectories do not care about running out of fuel, for some reason)
                     if (remoteTarget.bFusionReactorRunning)
                     {
