@@ -1459,3 +1459,33 @@ A sensor-visible contact within 2500 km (`1.671e-5 AU`, :69; torch-drive contact
 - Unresolved forensics: the -20 OKLGCiv integer can't be produced by any diluted person-path (pop 38 caps person acts at -0.26) and no OKLGCiv-owned ships exist in the save; likely a pruned-branch artifact of the 17:39 window (which briefly showed -90). Doesn't change any conclusion.
 
 **Bottom line for players:** with exactly two persistent player factions (personal + OKLGCiv), ~10 un-diluted -5 locks (or 4-5 railgun hits) on same-faction ships flip that whole faction's navy permanently hostile, region-wide, with no warning besides the one-tick surrender hail. Nothing else the player did — siphoning, crosshair-selecting, forced docking, existing while flying a stolen pirate hull — moves navy disposition at all.
+
+### Session 8 Testing (2026-08-11)
+- Final rundown, test with verbose logging disabled
+- In the "i think this guys running away" -> "docked but galfed doesnt like that" lineage, I never shot the Tombolo (I shot it in the chase yesterday)
+- The Babak Refit Hailey Cervantes was flying is spawned via debug, not captured. Good to know GalFed navy is agnostic to hull shape though
+- I did do some locks on civilian ships to see if they would run away in saves ancestral to "i think this guys running away" though
+- "i think this guys running away" featuring Hailey Cervantes of the Eldritch Funk (Babak Refit I spawned for myself)
+CCRE Enforcers +6.0
+GalCon Peacekeepers -60.0
+AyoSec +100.2
+Cloudbreak Corporate Security 0.0
+Policia Federal 0.0
+Newcal PD 0.0
+- At least that matches your data digging
+- Now starting from "new babak new me" featuring Alexa Leach of the Jaundiced Bastard (Babak Refit I spawned for myself)
+CCRE Enforcers 0.0
+GalCon Peacekeepers 0.0
+AyoSec +100.0
+Cloudbreak Corporate Security 0.0
+Policia Federal 0.0
+Newcal PD 0.0
+- In "myna acquired", I am now forced docked to a Myna, a 1 He3 + 1 D2O ship similar to the Tombolo
+  C:\Users\spenc\AppData\LocalLow\Blue Bottle Games\Ostranauts\Player.log (7 hits)
+	Line    81: [Info   :   BepInEx] Loading [Tank Stations 0.1.0]
+	Line    82: [Info   :Tank Stations] Tank Stations 0.1.0 loaded. T1 5 L/s, T2 100 L/s, tick every 2s.
+	Line  1565: [Info   :Tank Stations] Kiosk stock: stocked 4/4 pool(s), 8 entrie(s) added.
+	Line 29247: [Info   :Tank Stations] ResetNavData for O-CG3
+	Line 29248: [Info   :Tank Stations] Disabled reactor for O-CG3
+	Line 29715: [Info   :Tank Stations] [TankStations] Reconciled drain ledger on O-CG3: O2 0 kg, N2 540.55 kg, He3 3863.27 kg, D2O 33123.99 kg.
+- Clean and effective

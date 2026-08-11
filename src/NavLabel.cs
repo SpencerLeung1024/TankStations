@@ -194,6 +194,8 @@ internal static class NavLabel
         }
 
         // Investigate NPC behavior
+        // 2026-08-11: Clean up for release
+        /*
         stringBuilder.Append("\nfShallowRCSRemass ").Append(Fmt(target.fShallowRCSRemass)).Append(" kg");
         stringBuilder.Append("\nfShallowRCSRemassMax ").Append(Fmt(target.fShallowRCSRemassMax)).Append(" kg");
         stringBuilder.Append("\nfShallowFusionRemain ").Append(Fmt(target.fShallowFusionRemain)).Append(" s");
@@ -220,6 +222,7 @@ internal static class NavLabel
                 // There is also public List<Vector2> GetPoints(GUIOrbitDraw gorb) but I have no idea how to render the line
             }
         }
+        */
 
         return stringBuilder.ToString();
     }

@@ -222,11 +222,12 @@ internal static class ShallowFuel
         //bool flag = target.fShallowRCSRemass <= KgFloor && target.GetRCSMax() > 0.0;
         // 2026-08-10: Use 1.0 kg as the threshold, same as FlyTo.cs IsOutOfFuelApproximation
         bool flag = target.fShallowRCSRemass <= 1.0 && target.GetRCSMax() > 0.0;
-        Plugin.Log.LogInfo($"{flag}: target.fShallowRCSRemass = {target.fShallowRCSRemass} target.GetRCSMax() = {target.GetRCSMax()}");
+        // 2026-08-11: Clean up for release. We know the two flags work now
+        //Plugin.Log.LogInfo($"{flag}: target.fShallowRCSRemass = {target.fShallowRCSRemass} target.GetRCSMax() = {target.GetRCSMax()}");
         //bool flag2 = inv.BakedFusionSec > 0.0 && target.fShallowFusionRemain <= 0.0;
         // 2026-08-10: Ship AI never actually checks if it runs out of fuel or has negative fuel. Use 60 seconds as our threshold
         bool flag2 = target.fShallowFusionRemain <= 60.0 && inv.BakedFusionSec > 0.0;
-        Plugin.Log.LogInfo($"{flag2}: target.fShallowFusionRemain = {target.fShallowFusionRemain} inv.BakedFusionSec = {inv.BakedFusionSec}");
+        //Plugin.Log.LogInfo($"{flag2}: target.fShallowFusionRemain = {target.fShallowFusionRemain} inv.BakedFusionSec = {inv.BakedFusionSec}");
         /*
         bool flag3 = false;
         for (int i = 0; i < Names.Length; i++)
