@@ -192,6 +192,35 @@ internal static class NavLabel
         {
             stringBuilder.Append("\nTARGET DRY");
         }
+
+        // Investigate NPC behavior
+        stringBuilder.Append("\nfShallowRCSRemass ").Append(Fmt(target.fShallowRCSRemass)).Append(" kg");
+        stringBuilder.Append("\nfShallowRCSRemassMax ").Append(Fmt(target.fShallowRCSRemassMax)).Append(" kg");
+        stringBuilder.Append("\nfShallowFusionRemain ").Append(Fmt(target.fShallowFusionRemain)).Append(" s");
+        stringBuilder.Append("\nbFusionReactorRunning ").Append(target.bFusionReactorRunning ? "true" : "false");
+
+        if (target.objSS == null)
+        {
+            stringBuilder.Append("\nobjSS null");
+        }
+        else
+        {
+            if (!target.objSS.HasNavData())
+            {
+                stringBuilder.Append("\nNavData null");
+            }
+            else
+            {
+                Ostranauts.ShipGUIs.Utilities.NavDataPoint start = target.objSS.NavData.Origin;
+                Ostranauts.ShipGUIs.Utilities.NavDataPoint end = target.objSS.NavData.Destination;
+                stringBuilder.Append("\nArrivalTime ").Append(Fmt(start.ArrivalTime - StarSystem.fEpoch)).Append(" -> ").Append(Fmt(end.ArrivalTime - StarSystem.fEpoch));
+                stringBuilder.Append("\nFuelLevel ").Append(Fmt(start.FuelLevel)).Append(" -> ").Append(Fmt(end.FuelLevel));
+                stringBuilder.Append("\nTorchFuelLevel ").Append(Fmt(start.TorchFuelLevel)).Append(" -> ").Append(Fmt(end.TorchFuelLevel));
+
+                // There is also public List<Vector2> GetPoints(GUIOrbitDraw gorb) but I have no idea how to render the line
+            }
+        }
+
         return stringBuilder.ToString();
     }
 

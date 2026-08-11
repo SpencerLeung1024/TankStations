@@ -1148,3 +1148,220 @@ marks a ship without draining it; `addcond CO-O-8JGZ IsStale 1` force-stales it)
 `Saves/<name>/<name>.zip` → `ships/<regID>.json`: `fShallowRCSRemass`, `fShallowFusionRemain`,
 `bFusionTorch`, `objSS.jnd.aPoints[]` (`FuelLevel`/`TorchFuelLevel` per waypoint),
 `shipCO.aConds` (our ledger + victim conds persist through save/load — verified).
+
+### Session 6 Testing (2026-08-10)
+- Go ahead and add logs and labels to reveal whatever you need.
+- I also think the first design task forgot to say this: when I reply to you, always check DESIGN.md and the git log to see what changed
+- I edited NavLabel.cs to show fShallowFusionRemain and bFusionReactorRunning.
+- Oh, by the way, the Heavy Tug 01 that was on its way to OKLG_SEC was definitely not on a torch trajectory. All destinations in the OKLG starter zone are less than 5000 km apart.
+- However, the Heavy Tug 01 is a ship with a reactor. No wonder the scavenger didn't send out an SOS.
+- If you're peeking into saves you definitely want to sort by date. The default ordering by folder name / save name is basically meaningless.
+- Loading "fixed isturbo"
+- - I went around and uninstalled and spawned new tank stations to fix the faulty IsTurbo=20.0x1 condition.
+- - This is a save where I am close and stationary relative to the Heavy Tug 01 O-8JGZ, but have not done siphoning or boarding yet. The scav is still shallow.
+- - "3200 kg n2 20 kg he3 20 kg d2o" is a few minutes earlier game-time and like 2 days ago real-time.
+- - Setting Full Flow Range Km to 1.0 and Max Range Km to 1.0 so I can click on a ship and use the nav label as just a label, not interfering with numbers by siphoning.
+OUT OF RANGE - 4.44 km
+N2 1,355 kg
+He3 5,216 kg
+D2O 44,723 kg
+fShallowRCSRemass 1,355 kg
+fShallowRCSRemassMax 2,248 kg
+fShallowFusionRemain 23,558 s
+bFusionReactorRunning true
+- The save where the Tombolo 2 O-78ML is on its way to BCER is "i think this guys running away"
+- - This is a little earlier in the chase sequence. That ship just left whatever its hold pattern was, is 5000 km from BCER, and is going *towards* BCER at 3 km/s.
+OUT OF RANGE - 105 km
+N2 889.9 kg
+He3 5,205 kg
+D2O 44,716 kg
+fShallowRCSRemass 889.9 kg
+fShallowRCSRemassMax 1,499 kg
+fShallowFusionRemain 23,509 s
+bFusionReactorRunning true
+- 10 seconds later
+OUT OF RANGE - 78.4 km
+N2 889.9 kg
+He3 5,203 kg
+D2O 44,714 kg
+fShallowRCSRemass 889.9 kg
+fShallowRCSRemassMax 1,499 kg
+fShallowFusionRemain 23,499 s
+bFusionReactorRunning true
+- You were right, I was wrong. In the absence of siphoning throwing off the numbers, He3, D2O, and fShallowFusionRemain go down
+- Reverting ranges to 50 and 500 km
+SIPHON 281.7 L/s - 52.7 km
+N2 672.9 kg -16.9 kg/s
+He3 5,077 kg -12.1 kg/s
+D2O 43,530 kg -104 kg/s
+fShallowRCSRemass 672.9 kg
+fShallowRCSRemassMax 1,499 kg
+fShallowFusionRemain 23,489 s
+bFusionReactorRunning true
+- Our N2 draining is reflected in what the AI thinks (fShallowRCSRemass), but He3 and D2O draining is not reflected in fShallowFusionRemain
+- I guess target.objSS.ResetNavData() and target.bFusionReactorRunning = false is the method to deal with torch mobility kills. While I, the player, have been dealing with things like "actually having enough fuel for the trip", the NPCs get to be cheating bastards and execute burns that end up in negative fShallowFusionRemain. Reactor privileges revoked.
+- I'm pretty sure FlyToAutoPilot *is* the player plotting and engaging a course on their long range course plot. It's not any AI ship, it's an AI created and assigned to the player's ship.
+- Finding a non-reactor OKLG scavenger one of the gas tugs (they all have the same silhouette so I can't say which one unless I board) O-CWL "scav with no reactor"
+OUT OF RANGE - 44.5 km
+N2 301.3 kg
+fShallowRCSRemass 301.3 kg
+fShallowRCSRemassMax 749.4 kg
+fShallowFusionRemain 0 s
+bFusionReactorRunning false
+- - Resetting ranges, I can drain the ship down to N2 0.12 kg. It never reaches the TARGET DRY label
+- - When the ship reaches the derelict it was going to board at, it turns around and decelerates, despite having nowhere near enough N2 to do so. It also does not consume N2 during the process. N2 and fShallowRCSRemass are both 0.12 kg.
+- - It docks with the derelict, having effected 600 m/s of delta-V in the process.
+- Was it on an RCS NavData? Adding more stuff to the stringBuilder and retrying the encounter
+OUT OF RANGE - 44.5 km
+N2 301.3 kg
+fShallowRCSRemass 301.3 kg
+fShallowRCSRemassMax 749.4 kg
+fShallowFusionRemain 0 s
+bFusionReactorRunning false
+ArrivalTime -954.35 -> 741.5
+FuelLevel 347.5 -> 255.2
+TorchFuelLevel 0 -> 0
+- - So it is on an RCS NavData.
+- - At ArrivalTime -1676.1 -> 19.8 it starts flipping around and decelerating, moved not by N2 or fShallowRCSRemass (which it doesn't have) but by the hand of God or something
+- When it docks its loses its NavData
+NavData null
+- - Camping it until it undocks "scav playing the long game"
+- - 12 hours later, it still hasn't undocked. Multiple other scavs have docked at derelicts and undocked in this time. Maybe the AI realizes it has no fuel to go anywhere and never plots another trajectory. Maybe it won't undock while I'm nearby. Maybe it has chosen to spite me. Regardless of the reason, the scav won
+- Let me add code to ShallowFuel.cs to kill its NavData and retry the encounter
+[Info   :Tank Stations] False: target.fShallowRCSRemass = 284.818421696842 target.GetRCSMax() = 749.364694715254
+[Info   :Tank Stations] False: inv.BakedFusionSec = 0 target.fShallowFusionRemain = 0
+[Info   :Tank Stations] i = 0: inv.Kg[i] = 427.9199524 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 1: inv.Kg[i] = 5619.347973 GetLedgerKg(target.ShipCO, i) = 16.4357393450947
+[Info   :Tank Stations] i = 2: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 3: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] [TankStation 3c0bf4df-1e54-4631-b03f-ef98c3766ca7] PUMPING N2 +586.71 mol remote:O-CWL
+- - Ah, this one's an N2 gas tug
+[Info   :Tank Stations] False: target.fShallowRCSRemass = 0.129141368324778 target.GetRCSMax() = 749.364694715254
+[Info   :Tank Stations] False: inv.BakedFusionSec = 0 target.fShallowFusionRemain = 0
+[Info   :Tank Stations] i = 0: inv.Kg[i] = 427.9199524 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 1: inv.Kg[i] = 5619.347973 GetLedgerKg(target.ShipCO, i) = 301.125019673612
+[Info   :Tank Stations] i = 2: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 3: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] [TankStation 3c0bf4df-1e54-4631-b03f-ef98c3766ca7] PUMPING N2 +0.403 mol remote:O-CWL
+- - No wonder I couldn't mobility kill it. flag: 0.12 kg > 0.0 kg flag2: this isn't a reactor ship flag3: there's a load of N2 that is inaccessible to both the target's RCS and my siphon
+- - FlyTo.cs line 135: if (fuelLvlAtTheEnd < 0.0 || (fuelLvlAtTheEnd > 0.0 && rCSRemain <= 1.0))
+- - I changed flag to 1.0 kg
+[Info   :Tank Stations] True: target.fShallowRCSRemass = 0.992587858221993 target.GetRCSMax() = 749.364694715254
+[Info   :Tank Stations] False: target.fShallowFusionRemain = 0 inv.BakedFusionSec = 0
+[Info   :Tank Stations] i = 0: inv.Kg[i] = 427.9199524 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 1: inv.Kg[i] = 5619.347973 GetLedgerKg(target.ShipCO, i) = 300.261573183715
+[Info   :Tank Stations] i = 2: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] i = 3: inv.Kg[i] = 0 GetLedgerKg(target.ShipCO, i) = 0
+[Info   :Tank Stations] ResetNavData for O-CWL
+- - NavData cleared
+- - It collided into the derelict and bounced off instead of turning around, decelerating, and docking. Perfect
+- - But I didn't get an SOS from it
+- - I followed it for 3 hours.
+- - At 2079-08-27, 02:52:55, O-CWL disappeared
+Marking ship as stale: O-CWL; T TU-7a; Load:Shallow; Docked: False
+Marking ship as stale: O-EK0U; CR-53b; Load:Shallow; Docked: False
+Destroying ship O-CWL.
+#Info# Removing Emma Waller from O-CWL
+#NPC# Emma Waller died.
+Destroying ship O-EK0U.
+#Info# Removing Abby Nash from O-EK0U
+#NPC# Abby Nash died.
+[Info   :Tank Stations] [TankStation 3c0bf4df-1e54-4631-b03f-ef98c3766ca7] IDLE: no tanks loaded (drop salvaged tanks into the station's hopper)
+- - That's odd. Keep Drain Victims was *enabled*
+- Our Harmony patch should have blocked IsStale from being applied. Unless the ship already had IsStale before I did the siphoning?
+[Command]: getcond CO-O-CWL IsStale
+No matching condition(s) on
+[Command]: getcond CO-O-CWL *
+Found conditions for "
+Name: CO-O-CWL
+ID: CO-O-CWL
+StatInstallProgressMax (StatInstallProgressMax) = 1000
+StatUninstallProgressMax (StatUninstallProgressMax) = 1000
+StatRepairProgressMax (StatRepairProgressMax) = 1000
+IsSensorOpticalOn (Optical On) = 1
+IsSensorIROn (IR On) = 1
+IsSensorEmOn (EM On) = 1
+IsOverrideOn (Override On) = 1
+IsNotForSale (Not For Sale) = 1
+IsShip (Ship) = 1
+O-CWL (UniqueID) = 1
+StatTankDrainN2 (Tank Drain N2) = 140.433555057297
+- - No IsStale at the beginning of the encounter
+- - After draining
+StatTankDrainN2 (Tank Drain N2) = 301.059967000428
+IsTankDrainVictim (Fuel Drained) = 1
+- - I got tired of sitting and watching the game at 16x speed so I super fast forwarded 2 hours.
+- - O-CWL is nowhere to be seen. My nav has no selection.
+#Info# Removing Emma Waller from O-CWL
+#Info# Adding Emma Waller to MSUZ
+[Info   :Tank Stations] [TankStations] KeepDrainVictims: blocked UnregisterShip for O-CWL (TankerPod N2) - ship stays registered and inert.
+- - MSUZ is 3.03 AU away.
+- - O-CWL exists logically in the F3 debug console (getcond) and the debug fast travel insta-dock on the nav UI, but not in the game world. Insta-dock seemingly spawns it at my ship location
+- - I wouldn't pay too much mind to this. SFFWD is known to be screwy with ships. You can set a course for a derelict in 1 hour 5 minutes, SFFWD 1 hour, and the derelict is gone
+- Actually sitting and watching 16x speed for 3 hours
+- - This time 2:52 AM has come and gone, and O-CWL is still here. I even went to 4 AM.
+- - The only thing I changed was I used `getcond CO-O-CWL *` in the F3 menu once in a while. Does that reset a hidden stale timer?
+- Revisiting O-78ML: The Tombolo 2 going to BCER
+SIPHON 248.2 L/s - 59.2 km
+N2 603.5 kg -13.3 kg/s
+He3 5,022 kg -10.7 kg/s
+D2O 43,057 kg -91.6 kg/s
+fShallowRCSRemass 603.5 kg
+fShallowRCSRemassMax 1,499 kg
+fShallowFusionRemain 23,491 s
+bFusionReactorRunning true
+ArrivalTime -88.47 -> 975.7
+FuelLevel 889.9 -> 889.9
+TorchFuelLevel 23,558 -> 22,760
+[Command]: getcond CO-O-78ML *
+Found conditions for "
+Name: CO-O-78ML
+ID: CO-O-78ML
+StatInstallProgressMax (StatInstallProgressMax) = 1000
+StatUninstallProgressMax (StatUninstallProgressMax) = 1000
+StatRepairProgressMax (StatRepairProgressMax) = 1000
+IsSensorOpticalOn (Optical On) = 1
+IsSensorIROn (IR On) = 1
+IsSensorEMOn (EM On) = 1
+IsOverrideOn (Override On) = 1
+IsNotForSale (Not For Sale) = 1
+IsShip (Ship) = 1
+O-78ML (UniqueID) = 1
+StatTankDrainN2 (Tank Drain N2) = 348.39439377118
+StatTankDrainHe3 (Tank Drain He3) = 248.192903201507
+StatTankDrainTorch (Tank Drain Torch) = 8108.37757358901
+StatTankDrainD2O (Tank Drain D2O) = 2128.02682862728
+- - When I drained N2 below 1.0 kg, the NavData was reset. This is an artifact of my code: draining *either* N2 or fusion fuels resets *both* RCS and torch trajectories
+SIPHON 300 L/s - 21.6 km
+N2 0.94 kg -0.03 kg/s
+He3 1,801 kg -12.9 kg/s
+D2O 15,439 kg -110.7 kg/s
+fShallowRCSRemass 0.94 kg
+fShallowRCSRemassMax 1,499 kg
+fShallowFusionRemain 8,132 s
+bFusionReactorRunning false
+NavData null
+[Command]: getcond CO-O-78ML *
+Found conditions for "
+Name: CO-O-78ML
+ID: CO-O-78ML
+StatInstallProgressMax (StatInstallProgressMax) = 1000
+StatUninstallProgressMax (StatUninstallProgressMax) = 1000
+StatRepairProgressMax (StatRepairProgressMax) = 1000
+IsSensorOpticalOn (Optical On) = 1
+IsSensorIROn (IR On) = 1
+IsSensorEMOn (EM On) = 1
+IsOverrideOn (Override On) = 1
+IsNotForSale (Not For Sale) = 1
+IsShip (Ship) = 1
+O-78ML (UniqueID) = 1
+StatTankDrainN2 (Tank Drain N2) = 889.038410199609
+StatTankDrainHe3 (Tank Drain He3) = 3470.27506913732
+StatTankDrainTorch (Tank Drain Torch) = 1599900.97375455
+StatTankDrainD2O (Tank Drain D2O) = 29754.4303426149
+IsTankDrainVictim (Fuel Drained) = 1
+- - But the Tombolo 2 is still accelerating. I cut my own torch and its relative velocity is still changing. What's going on?
+- I have spent too long trying to figure out the mechanism of NPC scavenger SOS calls and ship despawning. As long as ships last ~as long as combat kills (3 hours since spawn or last board) I think this is workable
+- Once I finally make that Tombolo 2 stop thrusting and verify mobility kill of RCS trajectories, torch trajectories, and combat, I'll consider T4 and this mod feature complete
+- I'm actually thinking of removing flag3 of ShallowFuel.cs MaybeMarkVictim. It's very difficult to trigger the "90% of a resource removed" because different ships start with different amounts of fuel already burned. What matters is mobility kill, which flag and flag2 already achieve
+- I don't have a good answer for how to handle the case of stock torch burning ships that are on interplanetary journeys (like that MesaCargo) or have done runs around Ceres enough times to have fShallowFusionRemain < 0. As soon as you select them with a T4 our ShallowFuel.cs immediately sees a negative fShallowFusionRemain and strands them, like Wile E Coyote looking down moments before he falls

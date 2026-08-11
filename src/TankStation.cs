@@ -429,7 +429,22 @@ internal static class TankStation
             }
             if (flag)
             {
-                ShallowFuel.MaybeMarkVictim(remoteTarget, remoteInv);
+                // 2026-08-10: void -> bool, return value is whether the victim cond exists
+                bool mobilityKilled = ShallowFuel.MaybeMarkVictim(remoteTarget, remoteInv);
+                // 2026-08-10: If this ship is mobility killed and it has a NavData, clear the NavData
+                if (mobilityKilled
+                    && remoteTarget.objSS != null
+                    && remoteTarget.objSS.HasNavData())
+                {
+                    remoteTarget.objSS.ResetNavData();
+                    Plugin.Log.LogInfo($"ResetNavData for {remoteTarget.strRegID}");
+                    // For reactor ships, also disable their reactor (torch trajectories do not care about running out of fuel, for some reason)
+                    if (remoteTarget.bFusionReactorRunning)
+                    {
+                        remoteTarget.bFusionReactorRunning = false;
+                        Plugin.Log.LogInfo($"Disabled reactor for {remoteTarget.strRegID}");
+                    }
+                }
             }
         }
 

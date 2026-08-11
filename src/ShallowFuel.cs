@@ -212,17 +212,25 @@ internal static class ShallowFuel
     // Mark the target as a drain victim (despawn protection) - but only once it's meaningfully
     // crippled, so that idly clicking ships on the nav map (each click sips a little) doesn't
     // clog the ship list with kept-alive husks. The kg ledger is always written regardless.
-    public static void MaybeMarkVictim(Ship target, TemplateInv inv)
+    // 2026-08-10: void -> bool, return value is whether the victim cond exists
+    public static bool MaybeMarkVictim(Ship target, TemplateInv inv)
     {
         if (target?.ShipCO == null || inv == null || target.ShipCO.HasCond(VictimCond))
         {
-            return;
+            return true;
         }
-        bool flag = target.fShallowRCSRemass <= KgFloor && target.GetRCSMax() > 0.0;
-        bool flag2 = inv.BakedFusionSec > 0.0 && target.fShallowFusionRemain <= 0.0;
+        //bool flag = target.fShallowRCSRemass <= KgFloor && target.GetRCSMax() > 0.0;
+        // 2026-08-10: Use 1.0 kg as the threshold, same as FlyTo.cs IsOutOfFuelApproximation
+        bool flag = target.fShallowRCSRemass <= 1.0 && target.GetRCSMax() > 0.0;
+        Plugin.Log.LogInfo($"{flag}: target.fShallowRCSRemass = {target.fShallowRCSRemass} target.GetRCSMax() = {target.GetRCSMax()}");
+        //bool flag2 = inv.BakedFusionSec > 0.0 && target.fShallowFusionRemain <= 0.0;
+        // 2026-08-10: Ship AI never actually checks if it runs out of fuel or has negative fuel. Use 60 seconds as our threshold
+        bool flag2 = target.fShallowFusionRemain <= 60.0 && inv.BakedFusionSec > 0.0;
+        Plugin.Log.LogInfo($"{flag2}: target.fShallowFusionRemain = {target.fShallowFusionRemain} inv.BakedFusionSec = {inv.BakedFusionSec}");
         bool flag3 = false;
         for (int i = 0; i < Names.Length; i++)
         {
+            Plugin.Log.LogInfo($"i = {i}: inv.Kg[i] = {inv.Kg[i]} GetLedgerKg(target.ShipCO, i) = {GetLedgerKg(target.ShipCO, i)}");
             if (inv.Kg[i] > 0.0 && GetLedgerKg(target.ShipCO, i) >= 0.9 * inv.Kg[i])
             {
                 flag3 = true;
@@ -232,7 +240,9 @@ internal static class ShallowFuel
         if (flag || flag2 || flag3)
         {
             target.ShipCO.SetCondAmount(VictimCond, 1.0);
+            return true;
         }
+        return false;
     }
 
     // Virtual source volume (m^3) for remote gas drains, so flow decays as the target empties
