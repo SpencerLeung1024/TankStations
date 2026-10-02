@@ -1,10 +1,12 @@
+
 [
   {
-    "strName": "Tank Stations",
-    "strAuthor": "Avix_G",
-    "strModURL": "",
-    "strGameVersion": "1.0.0.9",
-    "strModVersion": "0.1.0",
-    "strNotes": "Adds 4 tiers of tank stations that empty specific tanks to refill your ship's tanks. Tier 1 is 1x1 and accepts a single can. Tier 2 is 3x3 and accepts 9 cans, or 1 large tank. Tier 3 adds the behavior of draining from a docked derelict. Tier 4 adds remote draining from a selected ship."
+    "strName" : "Tank Stations",
+    "strAuthor" : "Avix_G",
+    "strModURL" : "",
+    "strGameVersion" : "1.0.1.5",
+    "strModVersion"  : "0.1.0.2",
+    "strNotes"       : "Requires BepInEx.\n\nUPDATE 2026-10-02: Recompiled due to game changes. `void ShipSitu.ResetAccelerations()` -> `void ShipSitu.ResetAccelerations(bool bInternalOnly = true)`\n\nAdds 4 tiers of tank stations that empty specific tanks to refill your ship's tanks. Tier 1 is 1x1 and accepts a single can. Tier 2 is 3x3 and accepts 9 cans, or 1 large tank. Tier 3 adds the behavior of draining from a docked derelict. Tier 4 adds remote draining from a selected ship.The supply kiosk has T1 stations and a 30% chance of a T2 station. You can also find these on derelicts.\nT3 only spawns on hauler ships. Moor to one and \"borrow\" it.\nT4 is rare loot on a Ceres pirate ship.\n\nFlow rates and spawn chances of different tiers are configurable.\n\nThis mod should be safe to install to an existing save. Bad things might happen if you uninstall from a save though. It adds conditions to ships to keep track of drained fuel.\n\nKiosk insertion and derelict spawning logic based on code by Valtora.\nNav map label based on code by EddieSM.\nAlmost all of the code was written by Kimi K3.\n\nSource at https://github.com/SpencerLeung1024/TankStations, MIT license.",
+    "strWorkshopID"  : "3781525653"
   }
 ]
